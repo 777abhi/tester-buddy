@@ -11,12 +11,13 @@ program
 
 program
   .option('--open', 'Launch the interactive browser session')
+  .option('--url <url>', 'Start session at a specific URL')
   .option('--role <role>', 'Inject a specific user role (e.g., admin, customer)')
   .option('--seed-items <count>', 'Seed a specific number of items', parseInt)
   .action(async (options) => {
     try {
       if (options.open) {
-        await buddy.launchInteractive();
+        await buddy.launchInteractive(options.url);
       }
 
       if (options.role) {
