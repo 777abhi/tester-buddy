@@ -9,7 +9,7 @@ export class Buddy {
 
   constructor() {}
 
-  async launchInteractive() {
+  async launchInteractive(startUrl?: string) {
     console.log('Launching interactive session...');
     this.browser = await chromium.launch({ headless: false });
     this.context = await this.browser.newContext({
@@ -32,6 +32,11 @@ export class Buddy {
     this.page.setDefaultTimeout(0);
 
     console.log('Browser launched. Ready for manual testing.');
+
+    if (startUrl) {
+      console.log(`Navigating to: ${startUrl}`);
+      await this.page.goto(startUrl);
+    }
 
     // Navigate to a blank page or a help page to ensure the browser is visible and ready
     // Using about:blank is fine, but for axe to work we might need valid HTML.
