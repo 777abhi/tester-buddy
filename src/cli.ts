@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import { Buddy } from './buddy';
+import { ConfigLoader } from './config';
 
 const program = new Command();
-const buddy = new Buddy();
+let buddy: Buddy | undefined;
 
 program
   .name('tester-buddy')
@@ -16,6 +17,9 @@ program
   .option('--seed-items <count>', 'Seed a specific number of items', parseInt)
   .action(async (options) => {
     try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+
       if (options.open) {
         await buddy.launchInteractive(options.url);
       }
@@ -44,7 +48,7 @@ program
           process.stdin.on('data', async (text) => {
               const input = text.toString().trim();
               if (input === 'audit') {
-                  await buddy.quickAudit();
+                  await buddy?.quickAudit();
               } else if (input === 'exit') {
                   await cleanup();
                   process.exit(0);
@@ -71,7 +75,9 @@ async function cleanup() {
     if (isClosing) return;
     isClosing = true;
     console.log('\nClosing Tester Buddy...');
-    await buddy.close();
+    if (buddy) {
+      await buddy.close();
+    }
 }
 
 // Handle exit signals

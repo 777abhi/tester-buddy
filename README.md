@@ -66,23 +66,56 @@ You can view this trace by uploading it to [trace.playwright.dev](https://trace.
 npx playwright show-trace trace-<timestamp>.zip
 ```
 
+## Configuration
+
+You can customize the behavior of Tester Buddy by creating a `buddy.config.json` file in the current directory. This allows you to define custom cookies and local storage for different user roles.
+
+### Example `buddy.config.json`
+
+```json
+{
+  "roles": {
+    "admin": {
+      "cookies": [
+        {
+          "name": "session_id",
+          "value": "admin-secret-token",
+          "domain": "localhost",
+          "path": "/"
+        }
+      ],
+      "localStorage": {
+        "theme": "dark",
+        "notifications": "enabled"
+      }
+    },
+    "customer": {
+      "cookies": [],
+      "localStorage": {
+        "cart_id": "12345"
+      }
+    }
+  }
+}
+```
+
 ## Roadmap & Future Features
 
 We are constantly looking to improve Tester Buddy. Here are some ideas for future development:
 
-1.  **Dynamic Configuration**: Support a configuration file (e.g., `buddy.config.json`) to define custom cookie domains, local storage keys, and other environment-specific settings.
-2.  **Network Mocking**: enable defining mock API responses for specific routes to test edge cases or backend failures.
-3.  **Heuristic Testing Tools**:
+1.  **Network Mocking**: Enable defining mock API responses for specific routes to test edge cases or backend failures.
+2.  **Heuristic Testing Tools**:
     -   **Form Filler**: Automatically fill forms with valid/invalid data.
     -   **Bug Magnet**: Inject common problematic inputs (e.g., SQL injection strings, XSS vectors, long strings) into focused fields.
-4.  **Device Emulation**: Support for emulating mobile devices (viewports, user agents) to test responsiveness.
-5.  **Visual Regression Helpers**: Ability to take a "baseline" screenshot and compare it against the current state during the session.
-6.  **Issue Tracker Integration**: Create Jira/GitHub issues directly from the CLI, automatically attaching the trace and screenshots.
-7.  **Screenshot Management**: Easier way to take labeled screenshots during session.
-8.  **Session Replay**: Ability to replay a recorded session (from trace).
-9.  **Custom Javascript Injection**: Inject custom JS snippets into the page.
-10. **Cookie/Storage Editor**: Simple CLI command to list/edit cookies/local storage.
-11. **Performance Metrics**: Collect basic performance metrics (LCP, CLS) during the session.
+3.  **Device Emulation**: Support for emulating mobile devices (viewports, user agents) to test responsiveness.
+4.  **Visual Regression Helpers**: Ability to take a "baseline" screenshot and compare it against the current state during the session.
+5.  **Issue Tracker Integration**: Create Jira/GitHub issues directly from the CLI, automatically attaching the trace and screenshots.
+6.  **Screenshot Management**: Easier way to take labeled screenshots during session.
+7.  **Session Replay**: Ability to replay a recorded session (from trace).
+8.  **Custom Javascript Injection**: Inject custom JS snippets into the page.
+9.  **Cookie/Storage Editor**: Simple CLI command to list/edit cookies/local storage.
+10. **Performance Metrics**: Collect basic performance metrics (LCP, CLS) during the session.
+11. **AI Assistant**: Integrate an LLM to analyze the page content and suggest test cases or potential bugs.
 
 ## License
 
