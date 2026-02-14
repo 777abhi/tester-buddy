@@ -1,5 +1,6 @@
 import { chromium, Browser, BrowserContext, Page, request } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import { BuddyConfig } from './config';
 
 export class Buddy {
   private browser: Browser | null = null;
@@ -8,7 +9,7 @@ export class Buddy {
   private consoleErrors: string[] = [];
   private static readonly MAX_CONSOLE_ERRORS = 1000;
 
-  constructor() {}
+  constructor(private config: BuddyConfig = {}) {}
 
   async launchInteractive(startUrl?: string) {
     console.log('Launching interactive session...');
@@ -54,6 +55,33 @@ export class Buddy {
 
     console.log(`Injecting state for role: ${userRole}`);
 
+    const roleConfig = this.config.roles?.[userRole];
+
+    if (roleConfig) {
+      if (roleConfig.cookies) {
+        try {
+          await this.context.addCookies(roleConfig.cookies);
+        } catch (e) {
+          console.warn("Could not set cookies from config:", e);
+        }
+      }
+
+      if (roleConfig.localStorage) {
+        try {
+          await this.page.evaluate((storage) => {
+            for (const [key, value] of Object.entries(storage)) {
+              localStorage.setItem(key, value as string);
+            }
+          }, roleConfig.localStorage);
+        } catch (e) {
+          console.warn("Could not set localStorage from config:", e);
+        }
+      }
+
+      console.log('State injected from config.');
+      return;
+    }
+
     // Mock implementation of state injection
     // In a real app, you would probably target a specific domain
     const cookies = [
@@ -81,7 +109,7 @@ export class Buddy {
         console.warn("Could not set localStorage (maybe restricted origin):", e);
     }
 
-    console.log('State injected.');
+    console.log('State injected (fallback).');
   }
 
   async seedData(endpoint: string, payload: any) {
