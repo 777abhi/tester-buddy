@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tester Buddy Demo - Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Accessibility: Low contrast for testing */
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e0e0e0;
+            /* Low contrast */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Dashboard</h1>
+            <div id="user-info">Loading user...</div>
+            <button id="logout-btn" class="btn btn-danger">Logout</button>
+        </header>
+
+        <main>
+            <div id="loading-message">Loading dashboard data... (simulating API latency)</div>
+
+            <div id="dashboard-content" class="hidden">
+                <div class="card">
+                    <h2>Recent Activity</h2>
+                    <ul id="activity-list">
+                        <!-- Items injected via JS -->
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Statistics</h2>
+                    <p>Total Visits: <span class="stat-value">1,234</span></p>
+                    <p>Active Users: <span class="stat-value">567</span></p>
+                </div>
+
+                <div class="card">
+                    <h2>Actions</h2>
+                    <button id="open-modal-btn" class="btn">Open Settings Modal</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Settings</h2>
+            <p>Here you can configure your dashboard.</p>
+            <form>
+                <div>
+                    <label>Notification Email (missing 'for' attribute matching id)</label>
+                    <input type="email" placeholder="enter email">
+                </div>
+                <br>
+                <button type="button" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. Protected Route Logic
+        const role = localStorage.getItem('user_role');
+        if (!role) {
+            alert('Access Denied. Redirecting to login...');
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('user-info').textContent = `Welcome, ${role.toUpperCase()}`;
+
+            // 2. Simulate Dynamic Content Loading (API fetch)
+            setTimeout(() => {
+                document.getElementById('loading-message').classList.add('hidden');
+                document.getElementById('dashboard-content').classList.remove('hidden');
+
+                // Populate list
+                const list = document.getElementById('activity-list');
+                const items = ['Login successful', 'Viewed profile', 'Updated settings'];
+                items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    list.appendChild(li);
+                });
+            }, 1500); // 1.5s delay
+        }
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('user_role');
+            window.location.href = 'index.html';
+        });
+
+        // 3. Modal Logic
+        const modal = document.getElementById("myModal");
+        const btn = document.getElementById("open-modal-btn");
+        const span = document.getElementsByClassName("close")[0];
+
+        btn.onclick = function () {
+            modal.style.display = "block";
+        }
+
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>

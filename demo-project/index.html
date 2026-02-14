@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,29 +14,36 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         .container {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             color: #2c3e50;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        input[type="text"], input[type="password"] {
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+
         button {
             padding: 10px 15px;
             background-color: #3498db;
@@ -44,10 +52,12 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
         .error-btn {
             background-color: #e74c3c;
             margin-top: 20px;
         }
+
         /* Accessibility Violation: Low contrast */
         .low-contrast {
             color: #ccc;
@@ -56,6 +66,7 @@
             border: 1px solid #eee;
             margin-top: 20px;
         }
+
         #role-display {
             margin-top: 20px;
             padding: 10px;
@@ -66,6 +77,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Tester Buddy Demo Page</h1>
@@ -78,20 +90,35 @@
         <form id="login-form">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username">
+                <!-- Pre-fill for convenience -->
+                <input type="text" id="username" name="username" value="admin">
             </div>
             <!-- Accessibility Violation: Missing label -->
             <div class="form-group">
-                <input type="password" id="password" name="password" placeholder="Password (missing label)">
+                <input type="password" id="password" name="password" placeholder="Password (missing label)"
+                    value="password">
             </div>
             <button type="submit">Login</button>
         </form>
+
+        <script>
+            document.getElementById('login-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                // Simulate login
+                const user = document.getElementById('username').value;
+                if (user) {
+                    localStorage.setItem('user_role', user);
+                    window.location.href = 'dashboard.html';
+                }
+            });
+        </script>
 
         <div class="low-contrast">
             This text has low contrast (Accessibility Violation).
         </div>
 
-        <button class="error-btn" onclick="console.error('This is a test console error!')">Trigger Console Error</button>
+        <button class="error-btn" onclick="console.error('This is a test console error!')">Trigger Console
+            Error</button>
 
         <script>
             // Check for injected role (simulated via localStorage)
@@ -112,4 +139,5 @@
         </script>
     </div>
 </body>
+
 </html>
