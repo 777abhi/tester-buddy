@@ -1,6 +1,6 @@
 import { chromium, Browser, BrowserContext, Page, request } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
-import { BuddyConfig } from './config';
+import { BuddyConfig, ConfigLoader } from './config';
 
 export class Buddy {
   private browser: Browser | null = null;
@@ -9,7 +9,7 @@ export class Buddy {
   private consoleErrors: string[] = [];
   private static readonly MAX_CONSOLE_ERRORS = 1000;
 
-  constructor(private config: BuddyConfig = {}) {}
+  constructor(private config: BuddyConfig = {}) { }
 
   async launchInteractive(startUrl?: string) {
     console.log('Launching interactive session...');
@@ -95,18 +95,18 @@ export class Buddy {
 
     // We catch error in case we are on about:blank and setting cookies fails for specific domain if not matched
     try {
-        await this.context.addCookies(cookies);
+      await this.context.addCookies(cookies);
     } catch (e) {
-        console.warn("Could not set cookies (maybe domain mismatch or about:blank):", e);
+      console.warn("Could not set cookies (maybe domain mismatch or about:blank):", e);
     }
 
     try {
-        await this.page.evaluate((role) => {
-          localStorage.setItem('user_role', role);
-          localStorage.setItem('feature_flags', JSON.stringify({ beta: true }));
-        }, userRole);
+      await this.page.evaluate((role) => {
+        localStorage.setItem('user_role', role);
+        localStorage.setItem('feature_flags', JSON.stringify({ beta: true }));
+      }, userRole);
     } catch (e) {
-        console.warn("Could not set localStorage (maybe restricted origin):", e);
+      console.warn("Could not set localStorage (maybe restricted origin):", e);
     }
 
     console.log('State injected (fallback).');
@@ -118,17 +118,17 @@ export class Buddy {
     const apiContext = await request.newContext();
 
     try {
-        // In a real scenario, we would post to the endpoint
-        // const response = await apiContext.post(endpoint, { data: payload });
-        // console.log(`Response status: ${response.status()}`);
+      // In a real scenario, we would post to the endpoint
+      // const response = await apiContext.post(endpoint, { data: payload });
+      // console.log(`Response status: ${response.status()}`);
 
-        // Mocking the action for the MVP
-        console.log('Mock: Sending payload:', JSON.stringify(payload));
-        console.log('Mock: Data seeded successfully.');
+      // Mocking the action for the MVP
+      console.log('Mock: Sending payload:', JSON.stringify(payload));
+      console.log('Mock: Data seeded successfully.');
     } catch (error) {
-        console.error('Error seeding data:', error);
+      console.error('Error seeding data:', error);
     } finally {
-        await apiContext.dispose();
+      await apiContext.dispose();
     }
   }
 
@@ -144,17 +144,17 @@ export class Buddy {
       // Need to be on a page with content
       const url = this.page.url();
       if (url === 'about:blank') {
-          console.warn("Cannot run audit on about:blank. Please navigate to a URL first.");
+        console.warn("Cannot run audit on about:blank. Please navigate to a URL first.");
       } else {
-          const accessibilityScanResults = await new AxeBuilder({ page: this.page }).analyze();
-          if (accessibilityScanResults.violations.length > 0) {
-            console.warn(`Found ${accessibilityScanResults.violations.length} accessibility violations:`);
-            accessibilityScanResults.violations.forEach(v => {
-              console.warn(`- [${v.impact}] ${v.help}: ${v.helpUrl}`);
-            });
-          } else {
-            console.log('No accessibility violations found.');
-          }
+        const accessibilityScanResults = await new AxeBuilder({ page: this.page }).analyze();
+        if (accessibilityScanResults.violations.length > 0) {
+          console.warn(`Found ${accessibilityScanResults.violations.length} accessibility violations:`);
+          accessibilityScanResults.violations.forEach(v => {
+            console.warn(`- [${v.impact}] ${v.help}: ${v.helpUrl}`);
+          });
+        } else {
+          console.log('No accessibility violations found.');
+        }
       }
     } catch (e) {
       console.error("Failed to run Axe audit:", e);
@@ -169,9 +169,69 @@ export class Buddy {
     }
   }
 
-  async reloadPage() {
+  async dumpState() {
+    if (!this.context || !this.page) {
+      console.log('No active session.');
+      return;
+    }
+
+    console.log('Dumping current session state...');
+
+    // Cookies
+    const cookies = await this.context.cookies();
+    console.log('\n--- COOKIES ---');
+    console.log(JSON.stringify(cookies, null, 2));
+
+    // LocalStorage
+    let localStorageData = null;
+    try {
+      localStorageData = await this.page.evaluate(() => {
+        return JSON.stringify(localStorage);
+      });
+      console.log('\n--- LOCAL STORAGE ---');
+      console.log(JSON.stringify(JSON.parse(localStorageData), null, 2));
+    } catch (e) {
+      console.warn('Could not read localStorage:', e);
+    }
+    console.log('-------------------\n');
+
+    // Auto-save to config
+    if (!this.config.roles) {
+      this.config.roles = {};
+    }
+
+    const capturedRole: any = {
+      cookies: cookies.map(c => ({
+        name: c.name,
+        value: c.value,
+        domain: c.domain,
+        path: c.path
+      })),
+    };
+
+    if (localStorageData) {
+      try {
+        capturedRole.localStorage = JSON.parse(localStorageData);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    this.config.roles['captured-session'] = capturedRole;
+    await ConfigLoader.save(this.config);
+    console.log(`\n✅ Session saved as role 'captured-session' in buddy.config.json`);
+  }
+
+  async navigate(url: string) {
     if (this.page) {
-      console.log('Reloading page to apply state...');
+      console.log(`Navigating to: ${url}`);
+      await this.page.goto(url);
+    }
+  }
+
+  async reload() {
+    if (this.page) {
+      console.log('Reloading page...');
       await this.page.reload();
     }
   }

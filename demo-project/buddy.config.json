@@ -1,17 +1,31 @@
 {
-    "roles": {
-        "admin": {
-            "cookies": [],
-            "localStorage": {
-                "user_role": "admin",
-                "theme": "dark"
-            }
-        },
-        "guest": {
-            "cookies": [],
-            "localStorage": {
-                "user_role": "guest"
-            }
+  "roles": {
+    "admin": {
+      "cookies": [],
+      "localStorage": {
+        "user_role": "admin",
+        "theme": "dark"
+      }
+    },
+    "guest": {
+      "cookies": [],
+      "localStorage": {
+        "user_role": "guest"
+      }
+    },
+    "captured-session": {
+      "cookies": [
+        {
+          "name": "session-username",
+          "value": "standard_user",
+          "domain": "www.saucedemo.com",
+          "path": "/"
         }
+      ],
+      "localStorage": {
+        "backtrace-guid": "cb0b3316-6432-4c37-9a1e-c425216c7d22",
+        "backtrace-last-active": "1771110211578"
+      }
     }
+  }
 }

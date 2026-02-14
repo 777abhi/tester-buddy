@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 
 export interface CookieConfig {
@@ -29,6 +29,15 @@ export class ConfigLoader {
     } catch (error) {
       console.warn(`Failed to parse config file at ${configPath}:`, error);
       return {};
+    }
+  }
+
+  static async save(config: BuddyConfig, configPath: string = 'buddy.config.json'): Promise<void> {
+    try {
+      await writeFile(configPath, JSON.stringify(config, null, 2));
+      console.log(`Configuration saved to ${configPath}`);
+    } catch (error) {
+      console.error(`Failed to save config file at ${configPath}:`, error);
     }
   }
 }

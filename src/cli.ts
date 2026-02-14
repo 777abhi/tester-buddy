@@ -31,7 +31,12 @@ program
         }
         await buddy.injectState(options.role);
         if (options.open) {
-          await buddy.reloadPage();
+          if (options.url) {
+            await buddy.navigate(options.url);
+          } else {
+            // Fallback if no URL provided (unlikely given validation, but safe)
+            await buddy.reload();
+          }
         }
       }
 
@@ -44,6 +49,7 @@ program
       if (options.open) {
         console.log('Press Ctrl+C to exit and save trace.');
         console.log('Type "audit" to run a quick audit.');
+        console.log('Type "dump" to view current state (cookies/storage).');
 
         // Listen to stdin for commands like "audit"
         process.stdin.resume();
@@ -52,6 +58,8 @@ program
           const input = text.toString().trim();
           if (input === 'audit') {
             await buddy?.quickAudit();
+          } else if (input === 'dump') {
+            await buddy?.dumpState();
           } else if (input === 'exit') {
             await cleanup();
             process.exit(0);
