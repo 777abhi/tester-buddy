@@ -169,13 +169,13 @@ export class Buddy {
     }
   }
 
-  async dumpState() {
+  async dumpState(roleName: string = 'captured-session') {
     if (!this.context || !this.page) {
       console.log('No active session.');
       return;
     }
 
-    console.log('Dumping current session state...');
+    console.log(`Dumping current session state to role '${roleName}'...`);
 
     // Cookies
     const cookies = await this.context.cookies();
@@ -217,9 +217,9 @@ export class Buddy {
       }
     }
 
-    this.config.roles['captured-session'] = capturedRole;
+    this.config.roles[roleName] = capturedRole;
     await ConfigLoader.save(this.config);
-    console.log(`\n✅ Session saved as role 'captured-session' in buddy.config.json`);
+    console.log(`\n✅ Session saved as role '${roleName}' in buddy.config.json`);
   }
 
   async navigate(url: string) {

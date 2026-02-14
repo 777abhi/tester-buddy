@@ -49,7 +49,7 @@ program
       if (options.open) {
         console.log('Press Ctrl+C to exit and save trace.');
         console.log('Type "audit" to run a quick audit.');
-        console.log('Type "dump" to view current state (cookies/storage).');
+        console.log('Type "dump [role-name]" to save current state (default: captured-session).');
 
         // Listen to stdin for commands like "audit"
         process.stdin.resume();
@@ -58,8 +58,10 @@ program
           const input = text.toString().trim();
           if (input === 'audit') {
             await buddy?.quickAudit();
-          } else if (input === 'dump') {
-            await buddy?.dumpState();
+          } else if (input.startsWith('dump')) {
+            const parts = input.split(' ');
+            const roleName = parts.length > 1 ? parts[1] : undefined;
+            await buddy?.dumpState(roleName);
           } else if (input === 'exit') {
             await cleanup();
             process.exit(0);
