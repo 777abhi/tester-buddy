@@ -6,6 +6,7 @@ export class Buddy {
   private context: BrowserContext | null = null;
   private page: Page | null = null;
   private consoleErrors: string[] = [];
+  private static readonly MAX_CONSOLE_ERRORS = 1000;
 
   constructor() {}
 
@@ -25,6 +26,9 @@ export class Buddy {
     this.page.on('console', msg => {
       if (msg.type() === 'error') {
         this.consoleErrors.push(msg.text());
+        if (this.consoleErrors.length > Buddy.MAX_CONSOLE_ERRORS) {
+          this.consoleErrors.shift();
+        }
       }
     });
 
