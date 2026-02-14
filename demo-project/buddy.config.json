@@ -1,0 +1,17 @@
+{
+    "roles": {
+        "admin": {
+            "cookies": [],
+            "localStorage": {
+                "user_role": "admin",
+                "theme": "dark"
+            }
+        },
+        "guest": {
+            "cookies": [],
+            "localStorage": {
+                "user_role": "guest"
+            }
+        }
+    }
+}

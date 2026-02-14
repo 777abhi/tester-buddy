@@ -169,6 +169,13 @@ export class Buddy {
     }
   }
 
+  async reloadPage() {
+    if (this.page) {
+      console.log('Reloading page to apply state...');
+      await this.page.reload();
+    }
+  }
+
   async close() {
     if (this.context) {
       console.log('Saving trace...');

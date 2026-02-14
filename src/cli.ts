@@ -26,10 +26,13 @@ program
 
       if (options.role) {
         if (!options.open) {
-             console.error('Error: --role requires --open to be used.');
-             process.exit(1);
+          console.error('Error: --role requires --open to be used.');
+          process.exit(1);
         }
         await buddy.injectState(options.role);
+        if (options.open) {
+          await buddy.reloadPage();
+        }
       }
 
       if (options.seedItems) {
@@ -39,27 +42,27 @@ program
 
       // If open, we want to keep the process alive until user closes it or we can provide a command to run audit.
       if (options.open) {
-          console.log('Press Ctrl+C to exit and save trace.');
-          console.log('Type "audit" to run a quick audit.');
+        console.log('Press Ctrl+C to exit and save trace.');
+        console.log('Type "audit" to run a quick audit.');
 
-          // Listen to stdin for commands like "audit"
-          process.stdin.resume();
-          process.stdin.setEncoding('utf8');
-          process.stdin.on('data', async (text) => {
-              const input = text.toString().trim();
-              if (input === 'audit') {
-                  await buddy?.quickAudit();
-              } else if (input === 'exit') {
-                  await cleanup();
-                  process.exit(0);
-              }
-          });
+        // Listen to stdin for commands like "audit"
+        process.stdin.resume();
+        process.stdin.setEncoding('utf8');
+        process.stdin.on('data', async (text) => {
+          const input = text.toString().trim();
+          if (input === 'audit') {
+            await buddy?.quickAudit();
+          } else if (input === 'exit') {
+            await cleanup();
+            process.exit(0);
+          }
+        });
 
-          // Prevent the process from exiting immediately
-          await new Promise(() => {});
+        // Prevent the process from exiting immediately
+        await new Promise(() => { });
       } else {
         if (!options.seedItems) {
-            console.log('No action specified. Use --help for options.');
+          console.log('No action specified. Use --help for options.');
         }
       }
 
@@ -72,23 +75,23 @@ program
 
 let isClosing = false;
 async function cleanup() {
-    if (isClosing) return;
-    isClosing = true;
-    console.log('\nClosing Tester Buddy...');
-    if (buddy) {
-      await buddy.close();
-    }
+  if (isClosing) return;
+  isClosing = true;
+  console.log('\nClosing Tester Buddy...');
+  if (buddy) {
+    await buddy.close();
+  }
 }
 
 // Handle exit signals
 process.on('SIGINT', async () => {
-    await cleanup();
-    process.exit(0);
+  await cleanup();
+  process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    await cleanup();
-    process.exit(0);
+  await cleanup();
+  process.exit(0);
 });
 
 program.parse();
