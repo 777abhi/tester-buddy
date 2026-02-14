@@ -9,7 +9,9 @@ Tester Buddy is a CLI-based utility designed to assist manual exploratory tester
 - **Automated Tracing**: Automatically records a Playwright trace (screenshots, snapshots, sources) of your session.
 - **User Role Injection**: Quickly inject user session state (cookies, local storage) for different roles (e.g., admin, customer).
 - **Data Seeding**: Mock data seeding to prepare the test environment.
-- **In-Session Audit**: Run quick accessibility and console error checks on demand without leaving the session.
+- **Session Capture & Replay**: Capture real session state (cookies, localStorage) and replay it to bypass logins.
+- **Accessibility Auditing**: Integrated Axe Core accessibility scans.
+- **Console Monitoring**: Captures console errors during your session.
 
 ## Installation
 
@@ -66,7 +68,35 @@ You can view this trace by uploading it to [trace.playwright.dev](https://trace.
 npx playwright show-trace trace-<timestamp>.zip
 ```
 
-## Configuration
+## Session Management (New!)
+
+Tester Buddy now supports capturing and replaying real-world sessions, allowing you to bypass complex login flows.
+
+### 1. Capture a Session
+1.  Launch the tool: `npx ts-node src/cli.ts --open --url https://example.com`
+2.  Log in manually on the site.
+3.  In the terminal, type:
+    ```bash
+    dump my-role-name
+    ```
+    *(If you don't provide a name, it defaults to `captured-session`)*
+4.  This automatically saves your cookies and localStorage to `buddy.config.json`.
+
+### 2. Replay a Session
+Launch the tool with the `--role` flag to inject the captured state:
+
+```bash
+npx ts-node src/cli.ts --open --url https://example.com/dashboard --role my-role-name
+```
+
+The tool will:
+1.  Launch the browser.
+2.  Inject the cookies and localStorage for `my-role-name`.
+3.  **Navigate** to the target URL (e.g., `/dashboard`), bypassing the login screen.
+
+---
+
+## Contributinguration
 
 You can customize the behavior of Tester Buddy by creating a `buddy.config.json` file in the current directory. This allows you to define custom cookies and local storage for different user roles.
 
