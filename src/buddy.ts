@@ -92,8 +92,6 @@ export class Buddy {
 
         // Mocking the action for the MVP
         console.log('Mock: Sending payload:', JSON.stringify(payload));
-        // Simulate network delay
-        await new Promise(r => setTimeout(r, 500));
         console.log('Mock: Data seeded successfully.');
     } catch (error) {
         console.error('Error seeding data:', error);
