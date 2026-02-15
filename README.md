@@ -172,6 +172,37 @@ You can pre-define mocked network responses and user roles in `buddy.config.json
 
 We are actively working on making Tester Buddy even more powerful. Here is what is coming next:
 
+### 🚀 Proposed Agentic Capabilities
+- [ ] **Site Crawling & Mapping (`crawl`)**:
+    - **Goal**: Allow agents to autonomous map out an application without manually navigating every link.
+    - **Usage**: `npm run buddy -- crawl https://example.com --depth 2`
+    - **Benefits**: Automatically discovers all reachable pages, reports broken links (404s), and generates a "sitemap" JSON.
+
+- [ ] **Test Code Generation (`codegen`)**:
+    - **Goal**: Directly convert an exploration session into a robust Playwright test file.
+    - **Usage**: `npm run buddy -- codegen --session ./my-session.json --out tests/new-flow.spec.ts`
+    - **Benefits**: Removes boilerplate, ensures selector consistency, and includes expectations automatically.
+
+- [ ] **Network & Console Monitoring**:
+    - **Goal**: Catch invisible functionality bugs (API failures, JS errors) during exploration.
+    - **Usage**: `npm run buddy -- explore <url> --monitor-errors`
+    - **Benefits**: Fails if network requests error (4xx/5xx) or console errors occur, detecting issues visible UI might miss.
+
+- [ ] **Visual Change Detection**:
+    - **Goal**: Help agents "see" unplanned visual changes.
+    - **Usage**: `npm run buddy -- explore <url> --diff baseline.png`
+    - **Benefits**: Returns similarity score/description of visual changes, identifying CSS regressions.
+
+- [ ] **Smart Form Fuzzing**:
+    - **Goal**: Automated stress testing of input fields.
+    - **Usage**: `npm run buddy -- fuzz <url>`
+    - **Benefits**: Injects boundary values to crash test forms and report stack traces.
+
+- [ ] **Interactive REPL Mode**:
+    - **Goal**: Faster feedback loop for agents.
+    - **Usage**: `npm run buddy -- repl`
+    - **Benefits**: Keeps browser open for instant JSON command/result cycle, removing launch overhead.
+
 ### For Manual Testers
 - [ ] **Visual Regression Mode**: Take a "baseline" screenshot and automatically highlight differences in future sessions.
 - [ ] **Mobile Device Emulation**: simple text command to switch viewport and user-agent (e.g., `device iphone-14`).
