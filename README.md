@@ -125,9 +125,39 @@ You can customize the behavior of Tester Buddy by creating a `buddy.config.json`
         "cart_id": "12345"
       }
     }
-  }
+  },
+  "mocks": [
+    {
+      "urlPattern": "**/api/user/profile",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "contentType": "application/json",
+        "body": {
+          "id": 1,
+          "name": "Test User",
+          "role": "admin"
+        }
+      }
+    }
+  ]
 }
 ```
+
+## Network Mocking (New!)
+
+Tester Buddy allows you to mock network requests using the configuration file. This is useful for testing edge cases, error states, or specific data scenarios without relying on the backend.
+
+Add a `mocks` array to your `buddy.config.json`:
+
+| Field | Description |
+| :--- | :--- |
+| `urlPattern` | Glob pattern to match the URL (e.g., `**/api/users`). |
+| `method` | (Optional) HTTP method to match (e.g., `GET`, `POST`). If omitted, matches all methods. |
+| `response` | Object defining the response. |
+| `response.status` | HTTP status code (e.g., `200`, `404`, `500`). |
+| `response.contentType` | Content-Type header (e.g., `application/json`). |
+| `response.body` | Response body. Can be a string or a JSON object. |
 
 ## Roadmap & Future Features
 

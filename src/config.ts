@@ -13,8 +13,21 @@ export interface RoleConfig {
   localStorage?: Record<string, string>;
 }
 
+export interface MockResponse {
+  status: number;
+  contentType: string;
+  body: string | object;
+}
+
+export interface MockConfig {
+  urlPattern: string;
+  method?: string; // GET, POST, etc.
+  response: MockResponse;
+}
+
 export interface BuddyConfig {
   roles?: Record<string, RoleConfig>;
+  mocks?: MockConfig[];
 }
 
 export class ConfigLoader {
