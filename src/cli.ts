@@ -11,6 +11,107 @@ program
   .version('1.0.0');
 
 program
+  .command('explore <url>')
+  .description('Explore a web page and list interactive elements')
+  .option('--json', 'Output in JSON format')
+  .option('--screenshot', 'Save a screenshot')
+  .option('--show-all', 'Show all elements even if many')
+  .option('--do <action>', 'Action to perform: click:selector, fill:selector:value, wait:ms, goto:url. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
+  .option('--session <path>', 'Path to session file (JSON) to save/load state')
+  .action(async (url, options) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      const results = await buddy.explore(url, {
+        json: options.json,
+        screenshot: options.screenshot,
+        showAll: options.showAll,
+        actions: options.do,
+        session: options.session
+      });
+
+      if (options.json) {
+        console.log(JSON.stringify(results, null, 2));
+      } else {
+        // Markdown output similar to weblens.py
+        const data = results.elements;
+        if (data.length > 50 && !options.showAll) {
+          console.log(`Found ${data.length} interactive elements. Summarizing main functional areas...\n`);
+          const regions: { [key: string]: number } = {};
+          data.forEach(item => {
+            regions[item.region] = (regions[item.region] || 0) + 1;
+          });
+          console.log("| Functional Area | Interactive Elements Count |");
+          console.log("|---|---|");
+          Object.entries(regions).sort((a, b) => b[1] - a[1]).forEach(([region, count]) => {
+            console.log(`| ${region} | ${count} |`);
+          });
+        } else {
+          console.log("| Tag | Text/Value | ID | Class | ARIA-label |");
+          console.log("|---|---|---|---|---|");
+          data.forEach(item => {
+            let text = item.text.replace(/\s+/g, ' ');
+            if (text.length > 40) text = text.substring(0, 37) + "...";
+            let elClass = item.className;
+            if (elClass.length > 30) elClass = elClass.substring(0, 27) + "...";
+            let aria = item.ariaLabel;
+            if (aria.length > 30) aria = aria.substring(0, 27) + "...";
+            console.log(`| ${item.tag} | ${text} | ${item.id} | ${elClass} | ${aria} |`);
+          });
+        }
+      }
+      await buddy.close();
+    } catch (e) {
+      console.error('Error:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
+
+program
+  .command('forms <url>')
+  .description('Analyze forms on a page')
+  .option('--json', 'Output in JSON format')
+  .option('--session <path>', 'Path to session file (JSON) to save/load state')
+  .action(async (url, options) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      const results = await buddy.analyzeForms(url, {
+        json: options.json,
+        session: options.session
+      });
+
+      if (options.json) {
+        console.log(JSON.stringify(results, null, 2));
+      } else {
+        if (results.length === 0) {
+          console.log("No forms or interactive inputs found.");
+        } else {
+          results.forEach(group => {
+            console.log(`### ${group.name} (ID: ${group.id})`);
+            console.log("| Label | Type | Name | ID | Required | Current Value |");
+            console.log("|---|---|---|---|---|---|");
+            group.inputs.forEach(item => {
+              let label = item.label;
+              if (label.length > 30) label = label.substring(0, 27) + "...";
+              let val = item.value;
+              if (val.length > 20) val = val.substring(0, 17) + "...";
+              console.log(`| ${label} | ${item.type} | ${item.name} | ${item.id} | ${item.required} | ${val} |`);
+            });
+            console.log("\n");
+          });
+        }
+      }
+      await buddy.close();
+    } catch (e) {
+      console.error('Error:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
+
+program
   .option('--open', 'Launch the interactive browser session')
   .option('--url <url>', 'Start session at a specific URL')
   .option('--role <role>', 'Inject a specific user role (e.g., admin, customer)')
