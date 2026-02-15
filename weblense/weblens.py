@@ -12,7 +12,7 @@ def callback():
     pass
 
 @app.command()
-def explore(url: str, screenshot: bool = False):
+def explore(url: str, screenshot: bool = False, show_all: bool = False):
     """
     Navigates to a URL and returns a simplified Markdown table of all interactive elements.
     """
@@ -73,7 +73,7 @@ def explore(url: str, screenshot: bool = False):
             }""")
 
             # Context Window Optimisation
-            if len(data) > 50:
+            if len(data) > 50 and not show_all:
                 print(f"Found {len(data)} interactive elements. Summarizing main functional areas...\n")
 
                 # Group by region
