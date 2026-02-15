@@ -26,19 +26,22 @@ This tool is particularly useful for LLMs operating in a **terminal-only environ
 
 ## Usage
 
-WebLens provides a single command `explore` to visit a URL and list its interactive elements.
+WebLens provides two main commands: `explore` and `forms`.
+
+### Exploring the Page
+To visit a URL and list its interactive elements:
 
 ```bash
 python weblense/weblens.py explore <URL> [OPTIONS]
 ```
 
-### Options
+#### Options
 
 *   `--screenshot`: Saves a screenshot of the page to `screenshot.png`. useful if you have a way to view images, but primarily WebLens focuses on text output.
 *   `--show-all`: **Important**. By default, if a page has more than 50 interactive elements, WebLens summarizes them to save context window space. Use this flag to force WebLens to list **all** elements. This is essential when you need to find a specific selector on a complex page.
 *   `--help`: Show help message.
 
-### Output Format
+#### Output Format
 The output is a Markdown table with the following columns:
 *   **Tag**: The HTML tag (e.g., `a`, `button`, `input`).
 *   **Text/Value**: The visible text or value of the element.
@@ -46,12 +49,36 @@ The output is a Markdown table with the following columns:
 *   **Class**: The class list.
 *   **ARIA-label**: Accessibility label.
 
+### Analyzing Forms
+To analyze forms on a page and identify robust selectors for input fields:
+
+```bash
+python weblense/weblens.py forms <URL>
+```
+
+This command outputs a detailed breakdown of every form, including:
+*   **Label**: The computed label text (essential for `page.getByLabel()`).
+*   **Type**: The input type (text, password, select, etc.).
+*   **Attributes**: Name, ID, Required status, and current Value.
+
+**Example Output:**
+```markdown
+### login (ID: login)
+| Label | Type | Name | ID | Required | Current Value |
+|---|---|---|---|---|---|
+| Username | text | username | username | False |  |
+| Password | password | password | password | False |  |
+| Login | submit |  |  | False |  |
+```
+
 ## LLM Workflow: From Exploration to Automation
 
 When using WebLens to write test automation scripts (e.g., Playwright), follow this iterative process:
 
-1.  **Explore**: Run WebLens on the target URL.
-2.  **Analyze**: Look at the output table to identify the elements you need to interact with. Prioritize using `ID` if available, then unique `Class` names or `Text` content.
+1.  **Explore**: Run WebLens on the target URL. Use `explore` for general navigation and `forms` for detailed input analysis.
+2.  **Analyze**: Look at the output table to identify the elements you need to interact with.
+    *   For navigation, prioritize using `ID`, unique `Class` names, or `Text`.
+    *   For forms, use the `Label` column to write `getByLabel()` selectors, which are more robust and user-centric.
 3.  **Refine**: If the output is a summary (e.g., "Found 230 elements..."), run the command again with `--show-all` to get the details.
 4.  **Script**: Write a Playwright script step-by-step using the selectors found.
 5.  **Verify**: If the script involves navigation, you might need to run WebLens on the *next* URL to find selectors for the subsequent steps.
@@ -141,6 +168,8 @@ with sync_playwright() as playwright:
 ## Tips for LLMs
 
 *   **Handling Summaries**: If WebLens replies with a summary table (e.g., "| Functional Area | Count |"), it means the page is complex. Immediately re-run the command with `--show-all`.
-*   **Selector Priority**: Always prefer `ID`. If `ID` is missing, look for unique combinations of `Tag` and `Text`, or `Class`.
+*   **Selector Priority**:
+    *   For general elements: Prefer `ID`. If `ID` is missing, look for unique combinations of `Tag` and `Text`, or `Class`.
+    *   For form fields: Prefer `Label` (using `getByLabel`) or `ID`.
 *   **Dynamic Content**: WebLens waits for `domcontentloaded`. If a page is heavily dynamic (SPA), some elements might load later. The tool has a short built-in wait, but if you miss elements, they might be loading asynchronously.
 *   **Navigation**: WebLens is a static analyzer. It does not maintain a session or follow links automatically. You must explore each URL in your flow manually to build a multi-step script.
