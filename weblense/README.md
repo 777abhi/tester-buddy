@@ -1,11 +1,11 @@
 # WebLens: CLI Web Explorer for LLMs
 
-**WebLens** is a lightweight command-line utility designed to give Large Language Models (LLMs) "eyes" on the web. It renders web pages into a simplified, text-based format (Markdown tables) that LLMs can easily parse and understand.
+**WebLens** is a lightweight command-line utility designed to give Large Language Models (LLMs) and Agents "eyes" on the web. It renders web pages into a simplified, text-based format (Markdown tables or JSON) that LLMs can easily parse and understand.
 
 This tool is particularly useful for LLMs operating in a **terminal-only environment** where:
 *   There is no visual browser available.
-*   There is no Model Context Protocol (MCP) server (e.g., Puppeteer/Playwright server) to interact with the browser directly.
-*   The LLM needs to write robust automation scripts (e.g., Playwright, Selenium) by inspecting the actual DOM structure of a page.
+*   The LLM needs to interact with pages (click, fill forms) without writing full Playwright scripts.
+*   The LLM needs to maintain session state (cookies, login) across multiple commands.
 
 ## Installation
 
@@ -37,17 +37,41 @@ python weblense/weblens.py explore <URL> [OPTIONS]
 
 #### Options
 
-*   `--screenshot`: Saves a screenshot of the page to `screenshot.png`. useful if you have a way to view images, but primarily WebLens focuses on text output.
-*   `--show-all`: **Important**. By default, if a page has more than 50 interactive elements, WebLens summarizes them to save context window space. Use this flag to force WebLens to list **all** elements. This is essential when you need to find a specific selector on a complex page.
-*   `--help`: Show help message.
+*   `--json`: **Agent Mode**. Outputs the page structure in a detailed JSON format including bounding boxes. Perfect for machine parsing.
+*   `--session <path>`: Path to a JSON file to save/load cookies and localStorage. Use this to maintain login sessions across commands.
+*   `--do <action>`: Perform an action before analyzing. Can be repeated.
+    *   **Format**: `action:selector:value` (value is optional for click/wait)
+    *   **Examples**:
+        *   `--do click:#submit`
+        *   `--do fill:#username:myuser`
+        *   `--do wait:2000`
+*   `--screenshot`: Saves a screenshot of the page to `screenshot.png`.
+*   `--show-all`: **Important**. By default, if a page has more than 50 interactive elements, WebLens summarizes them. Use this to force listing **all** elements.
 
-#### Output Format
-The output is a Markdown table with the following columns:
-*   **Tag**: The HTML tag (e.g., `a`, `button`, `input`).
-*   **Text/Value**: The visible text or value of the element.
-*   **ID**: The DOM ID (crucial for reliable scripting).
-*   **Class**: The class list.
+#### Output Format (Markdown)
+The default output is a Markdown table with:
+*   **Tag**: HTML tag.
+*   **Text/Value**: Visible text or value.
+*   **ID**: DOM ID.
+*   **Class**: Class list.
 *   **ARIA-label**: Accessibility label.
+
+#### Output Format (JSON)
+When using `--json`, the output is a structured JSON object:
+```json
+{
+  "url": "https://example.com",
+  "title": "Example Domain",
+  "elements": [
+    {
+      "tag": "a",
+      "text": "More information...",
+      "region": "body",
+      "box": { "x": 100, "y": 200, "width": 50, "height": 20 }
+    }
+  ]
+}
+```
 
 ### Analyzing Forms
 To analyze forms on a page and identify robust selectors for input fields:
@@ -56,120 +80,39 @@ To analyze forms on a page and identify robust selectors for input fields:
 python weblense/weblens.py forms <URL>
 ```
 
-This command outputs a detailed breakdown of every form, including:
-*   **Label**: The computed label text (essential for `page.getByLabel()`).
-*   **Type**: The input type (text, password, select, etc.).
-*   **Attributes**: Name, ID, Required status, and current Value.
+## Agent Workflows
 
-**Example Output:**
-```markdown
-### login (ID: login)
-| Label | Type | Name | ID | Required | Current Value |
-|---|---|---|---|---|---|
-| Username | text | username | username | False |  |
-| Password | password | password | password | False |  |
-| Login | submit |  |  | False |  |
-```
-
-## LLM Workflow: From Exploration to Automation
-
-When using WebLens to write test automation scripts (e.g., Playwright), follow this iterative process:
-
-1.  **Explore**: Run WebLens on the target URL. Use `explore` for general navigation and `forms` for detailed input analysis.
-2.  **Analyze**: Look at the output table to identify the elements you need to interact with.
-    *   For navigation, prioritize using `ID`, unique `Class` names, or `Text`.
-    *   For forms, use the `Label` column to write `getByLabel()` selectors, which are more robust and user-centric.
-3.  **Refine**: If the output is a summary (e.g., "Found 230 elements..."), run the command again with `--show-all` to get the details.
-4.  **Script**: Write a Playwright script step-by-step using the selectors found.
-5.  **Verify**: If the script involves navigation, you might need to run WebLens on the *next* URL to find selectors for the subsequent steps.
-
-## Example Scenario: Automating a Purchase
-
-**Goal**: Write a Playwright script to add a "Grey Jacket" to the cart on `https://sauce-demo.myshopify.com/`.
-
-### Step 1: Explore the Homepage
-
-**Command:**
+### 1. Stateless Exploration
+Get a quick snapshot of a page's interactive elements.
 ```bash
-python weblense/weblens.py explore https://sauce-demo.myshopify.com/
+python weblense/weblens.py explore https://example.com --json
 ```
 
-**Output (Snippet):**
-```markdown
-| Tag | Text/Value | ID | Class | ARIA-label |
-|---|---|---|---|---|
-| ... | ... | ... | ... | ... |
-| a | Log In | customer_login_link |  |  |
-| a | Grey jacket £55.00 | product-1 | animated fadeInUpBig |  |
-| a | Noir jacket £60.00 | product-2 | animated fadeInUpBig |  |
-...
-```
+### 2. Multi-step Operations (Session Management)
+Perform a login flow by chaining commands with a session file.
 
-**Analysis:**
-We see the "Grey jacket" link has an ID `product-1`. This is a perfect selector.
-
-### Step 2: Explore the Product Page
-(We assume clicking `#product-1` leads to the product page. To get selectors for the "Add to Cart" button, we explore the product URL directly.)
-
-**Command:**
+**Step 1: Go to login page and analyze forms**
 ```bash
-python weblense/weblens.py explore https://sauce-demo.myshopify.com/products/grey-jacket
+python weblense/weblens.py forms https://github.com/login --session session.json
 ```
 
-**Output (Snippet):**
-```markdown
-| Tag | Text/Value | ID | Class | ARIA-label |
-|---|---|---|---|---|
-| ... | ... | ... | ... | ... |
-| select | Grey jacket | product-select-option-0 | single-option-selector |  |
-| input | Add to Cart | add | btn add-to-cart |  |
-...
+**Step 2: Perform Login**
+Use the `--do` flag to fill fields and click the sign-in button in one go.
+
+```bash
+python weblense/weblens.py explore https://github.com/login \
+  --do "fill:#login_field:myuser" \
+  --do "fill:#password:mypassword" \
+  --do "click:input[name='commit']" \
+  --session session.json
 ```
 
-**Analysis:**
-The "Add to Cart" button is an `input` with ID `add`.
-
-### Step 3: Write the Automation Script
-Based on the selectors found (`#product-1` and `#add`), we can write a robust Playwright script.
-
-**Generated Script (`test_checkout.py`):**
-```python
-from playwright.sync_api import sync_playwright
-
-def run(playwright):
-    browser = playwright.chromium.launch(headless=False)
-    page = browser.new_page()
-
-    # 1. Go to Home
-    print("Navigating to home...")
-    page.goto("https://sauce-demo.myshopify.com/")
-
-    # 2. Click on Grey Jacket (Found ID: product-1)
-    print("Clicking product...")
-    page.click("#product-1")
-
-    # 3. Wait for navigation and Add to Cart (Found ID: add)
-    # Good practice to wait for the element to be visible
-    page.wait_for_selector("#add")
-    print("Adding to cart...")
-    page.click("#add")
-
-    # Verification (Optional)
-    # We could look for a success message or cart update,
-    # but for this example, we just wait a bit to see the result.
-    page.wait_for_timeout(3000)
-
-    browser.close()
-
-with sync_playwright() as playwright:
-    run(playwright)
+**Step 3: Verify Dashboard**
+```bash
+python weblense/weblens.py explore https://github.com/ --session session.json
 ```
 
-## Tips for LLMs
-
-*   **Handling Summaries**: If WebLens replies with a summary table (e.g., "| Functional Area | Count |"), it means the page is complex. Immediately re-run the command with `--show-all`.
-*   **Selector Priority**:
-    *   For general elements: Prefer `ID`. If `ID` is missing, look for unique combinations of `Tag` and `Text`, or `Class`.
-    *   For form fields: Prefer `Label` (using `getByLabel`) or `ID`.
-*   **Dynamic Content**: WebLens waits for `domcontentloaded`. If a page is heavily dynamic (SPA), some elements might load later. The tool has a short built-in wait, but if you miss elements, they might be loading asynchronously.
-*   **Navigation**: WebLens is a static analyzer. It does not maintain a session or follow links automatically. You must explore each URL in your flow manually to build a multi-step script.
+## Tips for Agents
+*   **Use JSON**: Always use `--json` for programmatic access.
+*   **Session Persistence**: Always provide a `--session` path.
+*   **Chaining Actions**: Use multiple `--do` flags to execute a sequence of actions (fill form -> click submit -> wait).
