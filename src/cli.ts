@@ -17,6 +17,7 @@ program
   .option('--screenshot', 'Save a screenshot')
   .option('--show-all', 'Show all elements even if many')
   .option('--do <action>', 'Action to perform: click:selector, fill:selector:value, wait:ms, goto:url. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
+  .option('--expect <criteria>', 'Expectation to verify: text:value, selector:value, url:value. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
   .option('--session <path>', 'Path to session file (JSON) to save/load state')
   .action(async (url, options) => {
     try {
@@ -27,6 +28,7 @@ program
         screenshot: options.screenshot,
         showAll: options.showAll,
         actions: options.do,
+        expectations: options.expect,
         session: options.session
       });
 
@@ -47,6 +49,9 @@ program
             console.log(`| ${region} | ${count} |`);
           });
         } else {
+          // Sort alerts to top
+          data.sort((a, b) => (b.isAlert ? 1 : 0) - (a.isAlert ? 1 : 0));
+
           console.log("| Tag | Text/Value | ID | Class | ARIA-label |");
           console.log("|---|---|---|---|---|");
           data.forEach(item => {
@@ -56,7 +61,9 @@ program
             if (elClass.length > 30) elClass = elClass.substring(0, 27) + "...";
             let aria = item.ariaLabel;
             if (aria.length > 30) aria = aria.substring(0, 27) + "...";
-            console.log(`| ${item.tag} | ${text} | ${item.id} | ${elClass} | ${aria} |`);
+
+            const alertPrefix = item.isAlert ? "🚨 " : "";
+            console.log(`| ${item.tag} | ${alertPrefix}${text} | ${item.id} | ${elClass} | ${aria} |`);
           });
         }
       }

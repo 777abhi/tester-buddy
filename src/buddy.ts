@@ -15,6 +15,7 @@ export interface InteractiveElement {
     width: number;
     height: number;
   };
+  isAlert?: boolean;
 }
 
 export interface ExploreResult {
@@ -395,11 +396,57 @@ export class Buddy {
     }
   }
 
+  async checkExpectations(expectations: string[]) {
+    if (!this.page) throw new Error('Page not initialized');
+    console.log('Verifying expectations...');
+
+    for (const expectation of expectations) {
+      const parts = expectation.split(':');
+      const type = parts[0];
+      const value = parts.slice(1).join(':');
+
+      try {
+        if (type === 'text') {
+          // Check if text exists anywhere on the page
+          const isVisible = await this.page.isVisible(`text=${value}`);
+          if (isVisible) {
+            console.log(`✅ Expectation passed: Text "${value}" found.`);
+          } else {
+            console.error(`❌ Expectation failed: Text "${value}" NOT found.`);
+            process.exitCode = 1;
+          }
+        } else if (type === 'selector') {
+          // Check if selector exists and is visible
+          const isVisible = await this.page.isVisible(value);
+          if (isVisible) {
+            console.log(`✅ Expectation passed: Selector "${value}" found.`);
+          } else {
+            console.error(`❌ Expectation failed: Selector "${value}" NOT found.`);
+            process.exitCode = 1;
+          }
+        } else if (type === 'url') {
+          const currentUrl = this.page.url();
+          if (currentUrl.includes(value)) {
+            console.log(`✅ Expectation passed: URL contains "${value}".`);
+          } else {
+            console.error(`❌ Expectation failed: URL "${currentUrl}" does not contain "${value}".`);
+            process.exitCode = 1;
+          }
+        } else {
+          console.warn(`Unknown expectation type: ${type}`);
+        }
+      } catch (e) {
+        console.error(`Error checking expectation ${expectation}:`, e);
+      }
+    }
+  }
+
   async explore(url: string, options: {
     json?: boolean,
     screenshot?: boolean,
     showAll?: boolean,
     actions?: string[],
+    expectations?: string[],
     session?: string
   } = {}): Promise<ExploreResult> {
     try {
@@ -416,6 +463,10 @@ export class Buddy {
         await this.performActions(options.actions);
       }
 
+      if (options.expectations && options.expectations.length > 0) {
+        await this.checkExpectations(options.expectations);
+      }
+
       if (options.screenshot) {
         await this.page.screenshot({ path: 'screenshot.png', fullPage: false });
         if (!options.json) {
@@ -424,7 +475,14 @@ export class Buddy {
       }
 
       const data: ExploreResult = await this.page.evaluate(() => {
-        const elements = Array.from(document.querySelectorAll("button, a, input, select, textarea, [role='button'], [role='link']"));
+        const selectors = [
+          "button", "a", "input", "select", "textarea",
+          "[role='button']", "[role='link']",
+          "[role='alert']", "[aria-invalid='true']",
+          ".error-message", ".error", ".toast", ".alert"
+        ].join(", ");
+
+        const elements = Array.from(document.querySelectorAll(selectors));
         const visible = elements.filter(el => {
           const style = window.getComputedStyle(el);
           return style.display !== 'none' && style.visibility !== 'hidden' && (el as HTMLElement).offsetWidth > 0 && (el as HTMLElement).offsetHeight > 0;
@@ -446,6 +504,13 @@ export class Buddy {
               }
             }
 
+            const isAlert = el.getAttribute('role') === 'alert' ||
+              el.getAttribute('aria-invalid') === 'true' ||
+              el.classList.contains('error-message') ||
+              el.classList.contains('error') ||
+              el.classList.contains('toast') ||
+              el.classList.contains('alert');
+
             return {
               tag: el.tagName.toLowerCase(),
               text: (el.textContent || (el as HTMLInputElement).value || '').trim(),
@@ -458,7 +523,8 @@ export class Buddy {
                 y: rect.y,
                 width: rect.width,
                 height: rect.height
-              }
+              },
+              isAlert: isAlert || undefined
             };
           })
         };
