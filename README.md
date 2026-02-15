@@ -32,7 +32,7 @@ As a manual tester, you often need to jump into specific states (like "Admin wit
 Launch an interactive browser session:
 
 ```bash
-npm run buddy -- --open --url https://example.com
+npm run buddy -- --open --url https://www.saucedemo.com/
 ```
 
 This opens a Chromium browser. You can interact with it normally.
@@ -49,7 +49,7 @@ Stop manually logging in every time you restart testing.
     This saves specific cookies and localStorage to `buddy.config.json`.
 3.  **Replay**: Next time, launch directly as that user:
     ```bash
-    npm run buddy -- --open --role admin-role --url https://example.com/dashboard
+    npm run buddy -- --open --role admin-role --url https://www.saucedemo.com/inventory.html
     ```
     You will start logged in, bypassing the login screen.
 
@@ -79,7 +79,7 @@ Use the `explore` command to get a structured, LLM-friendly representation of th
 
 ```bash
 # Get a JSON dump of all interactive elements
-npm run buddy -- explore https://example.com --json
+npm run buddy -- explore https://www.saucedemo.com/ --json
 ```
 
 **What you get:**
@@ -93,13 +93,14 @@ npm run buddy -- explore https://example.com --json
 
 You can chain actions to simulate a user flow and verify the result in a single command.
 
-**Example: Search for "Updates"**
+**Example: Login Flow Verification**
 ```bash
-npm run buddy -- explore https://example.com \
-  --do "fill:#search-input:Updates" \
-  --do "click:.search-button" \
+npm run buddy -- explore https://www.saucedemo.com/ \
+  --do "fill:#user-name:standard_user" \
+  --do "fill:#password:secret_sauce" \
+  --do "click:#login-button" \
   --do "wait:2000" \
-  --expect "text:Search Results"
+  --expect "text:Swag Labs"
 ```
 
 **Supported `--do` Actions:**
@@ -118,7 +119,8 @@ npm run buddy -- explore https://example.com \
 Use the `forms` command to specifically analyze input fields, understanding what data is required.
 
 ```bash
-npm run buddy -- forms https://example.com/signup --json
+```bash
+npm run buddy -- forms https://www.saucedemo.com/ --json
 ```
 
 **Returns:**
@@ -131,17 +133,18 @@ Agents can maintain "state" across different command executions using the `--ses
 
 1.  **Login and Save State:**
     ```bash
-    npm run buddy -- explore https://example.com/login \
-      --do "fill:#user:admin" \
-      --do "fill:#pass:secret" \
-      --do "click:#login-btn" \
-      --session ./admin-session.json
+    npm run buddy -- explore https://www.saucedemo.com/ \
+      --do "fill:#user-name:standard_user" \
+      --do "fill:#password:secret_sauce" \
+      --do "click:#login-button" \
+      --session ./standard-session.json
     ```
 
 2.  **Reuse State (Start Logged In):**
     ```bash
-    npm run buddy -- explore https://example.com/admin \
-      --session ./admin-session.json
+    ```bash
+    npm run buddy -- explore https://www.saucedemo.com/inventory.html \
+      --session ./standard-session.json
     ```
 
 ---
@@ -175,7 +178,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 ### 🚀 Proposed Agentic Capabilities
 - [ ] **Site Crawling & Mapping (`crawl`)**:
     - **Goal**: Allow agents to autonomous map out an application without manually navigating every link.
-    - **Usage**: `npm run buddy -- crawl https://example.com --depth 2`
+    - **Usage**: `npm run buddy -- crawl https://www.saucedemo.com/ --depth 2`
     - **Benefits**: Automatically discovers all reachable pages, reports broken links (404s), and generates a "sitemap" JSON.
 
 - [ ] **Test Code Generation (`codegen`)**:
