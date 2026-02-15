@@ -1,17 +1,10 @@
 # Tester Buddy
 
-Tester Buddy is a CLI-based utility designed to assist manual exploratory testers by automating repetitive tasks and providing testing aids directly within a browser session. It leverages Playwright for browser automation and Axe Core for accessibility audits.
+Tester Buddy is a CLI-based utility designed to bridge the gap between manual exploratory testing and automated browser interactions. It serves two primary audiences:
+1.  **Exploratory Manual Testers**: Provides a powerful "sidekick" browser that handles repetitive tasks, state injection, and accessibility audits.
+2.  **Chat LLM Agents**: Offers a text-based interface to "see" and "interact" with web pages, enabling agents to autonomously verify UI, fill forms, and validate flows without a GUI.
 
-## Features
-
-- **Interactive Browser Session**: Launches a Chromium browser instance ready for manual testing.
-- **Configurable Target URL**: Start the session directly at a specific URL.
-- **Automated Tracing**: Automatically records a Playwright trace (screenshots, snapshots, sources) of your session.
-- **User Role Injection**: Quickly inject user session state (cookies, local storage) for different roles (e.g., admin, customer).
-- **Data Seeding**: Mock data seeding to prepare the test environment.
-- **Session Capture & Replay**: Capture real session state (cookies, localStorage) and replay it to bypass logins.
-- **Accessibility Auditing**: Integrated Axe Core accessibility scans.
-- **Console Monitoring**: Captures console errors during your session.
+---
 
 ## Installation
 
@@ -28,154 +21,152 @@ Ensure you have Node.js installed (v16+ recommended).
     npm install
     ```
 
-## Usage
+---
 
-Run the tool using `npm run buddy` followed by the desired options.
+## 👩‍💻 Section 1: For Exploratory Manual Testers
 
-### Basic Command
+As a manual tester, you often need to jump into specific states (like "Admin with items in cart") or quickly check for hidden issues (like accessibility violations or console errors) without opening DevTools constantly. Tester Buddy acts as your automated assistant.
+
+### 🚀 Getting Started
+
+Launch an interactive browser session:
 
 ```bash
-npm run buddy -- [options]
+npm run buddy -- --open --url https://example.com
 ```
 
-### Options
+This opens a Chromium browser. You can interact with it normally.
 
-| Option | Description |
-| :--- | :--- |
-| `--open` | Launch the interactive browser session. Required for most interactive features. |
-| `--url <url>` | Start session at a specific URL. Requires `--open`. |
-| `--role <role>` | Inject a specific user role (e.g., `admin`, `customer`). Sets cookies and local storage. Requires `--open`. |
-| `--seed-items <count>` | Mock seeding a specific number of items to the backend. |
-| `-V, --version` | Output the version number. |
-| `-h, --help` | Display help for command. |
+### 🛠 Key Features for Manual Testing
 
-### Interactive Commands
-
-Once the session is running (with `--open`), you can type commands into the terminal:
-
--   `audit`: Runs a quick audit on the current page.
-    -   **Accessibility**: Scans for violations using `@axe-core/playwright`.
-    -   **Console Errors**: Reports any console errors captured during the session.
--   `exit`: Closes the browser and saves the session trace.
-
-### Output
-
-Upon exiting the session, a Playwright Trace file is saved to the current directory with the name format:
-`trace-<timestamp>.zip`
-
-You can view this trace by uploading it to [trace.playwright.dev](https://trace.playwright.dev/) or using the Playwright CLI:
-```bash
-npx playwright show-trace trace-<timestamp>.zip
-```
-
-## Session Management (New!)
-
-Tester Buddy now supports capturing and replaying real-world sessions, allowing you to bypass complex login flows.
-
-### 1. Capture a Session
-1.  Launch the tool: `npx ts-node src/cli.ts --open --url https://example.com`
-2.  Log in manually on the site.
-3.  In the terminal, type:
+#### 1. Instant Session Management (Login Bypass)
+Stop manually logging in every time you restart testing.
+1.  **Capture**: Log in manually in the opened browser.
+2.  **Save**: In your terminal, type:
     ```bash
-    dump my-role-name
+    dump admin-role
     ```
-    *(If you don't provide a name, it defaults to `captured-session`)*
-4.  This automatically saves your cookies and localStorage to `buddy.config.json`.
+    This saves specific cookies and localStorage to `buddy.config.json`.
+3.  **Replay**: Next time, launch directly as that user:
+    ```bash
+    npm run buddy -- --open --role admin-role --url https://example.com/dashboard
+    ```
+    You will start logged in, bypassing the login screen.
 
-### 2. Replay a Session
-Launch the tool with the `--role` flag to inject the captured state:
-
+#### 2. Mock Data Seeding
+Need a specific data state? Seed it instantly (requires backend configuration).
 ```bash
-npx ts-node src/cli.ts --open --url https://example.com/dashboard --role my-role-name
+npm run buddy -- --open --seed-items 50
 ```
 
-The tool will:
-1.  Launch the browser.
-2.  Inject the cookies and localStorage for `my-role-name`.
-3.  **Navigate** to the target URL (e.g., `/dashboard`), bypassing the login screen.
+#### 3. On-Demand Audits
+While testing, type `audit` in the terminal to:
+-   Scan the current page for **Accessibility Violations** (using Axe Core).
+-   Report any **Console Errors** that occurred during your session.
+
+#### 4. Automated Tracing
+Every session is automatically recorded. When you type `exit`, a pure Playwright Trace (`trace-<timestamp>.zip`) is saved. You can upload this to [trace.playwright.dev](https://trace.playwright.dev/) to inspect network calls, snapshots, and errors post-mortem.
 
 ---
 
-## Contributinguration
+## 🤖 Section 2: For Chat LLM Agents (Terminal Only)
 
-You can customize the behavior of Tester Buddy by creating a `buddy.config.json` file in the current directory. This allows you to define custom cookies and local storage for different user roles.
+As an AI agent, you don't have eyes or a mouse. Tester Buddy gives you a "textual viewport" and "action capability" to autonomously explore and test web applications.
 
-### Example `buddy.config.json`
+### 🔍 How to "See" a Page
+
+Use the `explore` command to get a structured, LLM-friendly representation of the page.
+
+```bash
+# Get a JSON dump of all interactive elements
+npm run buddy -- explore https://example.com --json
+```
+
+**What you get:**
+-   **Interactive Elements**: Links, buttons, inputs (filtered for visibility).
+-   **Accessibility Info**: ARIA labels, roles.
+-   **Structure**: Elements grouped by functional areas.
+
+**Tip:** Use the `--json` flag for easier parsing, or omit it for a Markdown summary that uses fewer tokens.
+
+### ✍️ How to "Act" on a Page
+
+You can chain actions to simulate a user flow and verify the result in a single command.
+
+**Example: Search for "Updates"**
+```bash
+npm run buddy -- explore https://example.com \
+  --do "fill:#search-input:Updates" \
+  --do "click:.search-button" \
+  --do "wait:2000" \
+  --expect "text:Search Results"
+```
+
+**Supported `--do` Actions:**
+-   `click:<selector>`: Click an element.
+-   `fill:<selector>:<value>`: Type text into an input.
+-   `goto:<url>`: Navigate to a new URL.
+-   `wait:<ms>`: Pause execution (useful for waiting for animations).
+
+**Supported `--expect` Verifications:**
+-   `text:<value>`: Verify page contains specific text.
+-   `selector:<value>`: Verify an element exists.
+-   `url:<value>`: Verify the current URL contains a string.
+
+### 📝 Handling Forms
+
+Use the `forms` command to specifically analyze input fields, understanding what data is required.
+
+```bash
+npm run buddy -- forms https://example.com/signup --json
+```
+
+**Returns:**
+-   Form groups.
+-   Input types, names, IDs, required status, and current values.
+
+### 🧠 Persistent Memory for Agents
+
+Agents can maintain "state" across different command executions using the `--session` flag.
+
+1.  **Login and Save State:**
+    ```bash
+    npm run buddy -- explore https://example.com/login \
+      --do "fill:#user:admin" \
+      --do "fill:#pass:secret" \
+      --do "click:#login-btn" \
+      --session ./admin-session.json
+    ```
+
+2.  **Reuse State (Start Logged In):**
+    ```bash
+    npm run buddy -- explore https://example.com/admin \
+      --session ./admin-session.json
+    ```
+
+---
+
+## Configuration (`buddy.config.json`)
+
+You can pre-define mocked network responses and user roles in `buddy.config.json`.
 
 ```json
 {
   "roles": {
     "admin": {
-      "cookies": [
-        {
-          "name": "session_id",
-          "value": "admin-secret-token",
-          "domain": "localhost",
-          "path": "/"
-        }
-      ],
-      "localStorage": {
-        "theme": "dark",
-        "notifications": "enabled"
-      }
-    },
-    "customer": {
-      "cookies": [],
-      "localStorage": {
-        "cart_id": "12345"
-      }
+      "cookies": [{ "name": "session", "value": "..." }],
+      "localStorage": { "theme": "dark" }
     }
   },
   "mocks": [
     {
-      "urlPattern": "**/api/user/profile",
+      "urlPattern": "**/api/data",
       "method": "GET",
-      "response": {
-        "status": 200,
-        "contentType": "application/json",
-        "body": {
-          "id": 1,
-          "name": "Test User",
-          "role": "admin"
-        }
-      }
+      "response": { "status": 200, "body": { "id": 1 } }
     }
   ]
 }
 ```
-
-## Network Mocking (New!)
-
-Tester Buddy allows you to mock network requests using the configuration file. This is useful for testing edge cases, error states, or specific data scenarios without relying on the backend.
-
-Add a `mocks` array to your `buddy.config.json`:
-
-| Field | Description |
-| :--- | :--- |
-| `urlPattern` | Glob pattern to match the URL (e.g., `**/api/users`). |
-| `method` | (Optional) HTTP method to match (e.g., `GET`, `POST`). If omitted, matches all methods. |
-| `response` | Object defining the response. |
-| `response.status` | HTTP status code (e.g., `200`, `404`, `500`). |
-| `response.contentType` | Content-Type header (e.g., `application/json`). |
-| `response.body` | Response body. Can be a string or a JSON object. |
-
-## Roadmap & Future Features
-
-We are constantly looking to improve Tester Buddy. Here are some ideas for future development:
-
-1.  **Network Mocking**: Enable defining mock API responses for specific routes to test edge cases or backend failures.
-2.  **Heuristic Testing Tools**:
-    -   **Form Filler**: Automatically fill forms with valid/invalid data.
-    -   **Bug Magnet**: Inject common problematic inputs (e.g., SQL injection strings, XSS vectors, long strings) into focused fields.
-3.  **Device Emulation**: Support for emulating mobile devices (viewports, user agents) to test responsiveness.
-4.  **Visual Regression Helpers**: Ability to take a "baseline" screenshot and compare it against the current state during the session.
-5.  **Issue Tracker Integration**: Create Jira/GitHub issues directly from the CLI, automatically attaching the trace and screenshots.
-6.  **Screenshot Management**: Easier way to take labeled screenshots during session.
-7.  **Session Replay**: Ability to replay a recorded session (from trace).
-8.  **Custom Javascript Injection**: Inject custom JS snippets into the page.
-9.  **Cookie/Storage Editor**: Simple CLI command to list/edit cookies/local storage.
-10. **Performance Metrics**: Collect basic performance metrics (LCP, CLS) during the session.
-11. **AI Assistant**: Integrate an LLM to analyze the page content and suggest test cases or potential bugs.
 
 ## License
 
