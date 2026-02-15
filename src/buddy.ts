@@ -38,6 +38,9 @@ export class Buddy {
 
     console.log('Browser launched. Ready for manual testing.');
 
+    // Apply network mocks if configured
+    await this.applyMocks();
+
     if (startUrl) {
       console.log(`Navigating to: ${startUrl}`);
       await this.page.goto(startUrl);
@@ -46,6 +49,43 @@ export class Buddy {
     // Navigate to a blank page or a help page to ensure the browser is visible and ready
     // Using about:blank is fine, but for axe to work we might need valid HTML.
     // We will let the user navigate.
+  }
+
+  async applyMocks() {
+    if (!this.config.mocks || this.config.mocks.length === 0) {
+      return;
+    }
+
+    if (!this.page) {
+      console.warn('Cannot apply mocks: Page not initialized.');
+      return;
+    }
+
+    console.log(`Applying ${this.config.mocks.length} network mocks...`);
+
+    for (const mockConfig of this.config.mocks) {
+      await this.page.route(mockConfig.urlPattern, async (route) => {
+        const request = route.request();
+        if (mockConfig.method && request.method() !== mockConfig.method.toUpperCase()) {
+          // Method mismatch, continue to next handler or network
+          await route.continue();
+          return;
+        }
+
+        console.log(`Mocking request: ${request.method()} ${request.url()}`);
+
+        let body = mockConfig.response.body;
+        if (typeof body !== 'string') {
+          body = JSON.stringify(body);
+        }
+
+        await route.fulfill({
+          status: mockConfig.response.status,
+          contentType: mockConfig.response.contentType,
+          body: body,
+        });
+      });
+    }
   }
 
   async injectState(userRole: string) {
