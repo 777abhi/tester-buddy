@@ -76,6 +76,44 @@ program
   });
 
 program
+  .command('crawl <url>')
+  .description('Crawl a website and map its structure')
+  .option('--depth <number>', 'Depth of crawl (default: 2)', parseInt, 2)
+  .option('--json', 'Output in JSON format')
+  .action(async (url, options) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      const results = await buddy.crawl(url, options.depth);
+
+      if (options.json) {
+        console.log(JSON.stringify(results, null, 2));
+      } else {
+        console.log(`\nCrawling complete. Found ${results.length} pages.\n`);
+
+        console.log("| Status | URL | Links Found | Error |");
+        console.log("|---|---|---|---|");
+        results.forEach(res => {
+          let error = res.error ? res.error : "";
+          if (error.length > 20) error = error.substring(0, 17) + "...";
+          const statusIcon = res.status >= 200 && res.status < 300 ? "✅" : (res.status === 404 ? "❌" : "⚠️");
+          console.log(`| ${statusIcon} ${res.status} | ${res.url} | ${res.links.length} | ${error} |`);
+        });
+
+        const brokenLinks = results.filter(r => r.status >= 400 || r.error);
+        if (brokenLinks.length > 0) {
+            console.log(`\n🚨 Found ${brokenLinks.length} broken links/errors!`);
+        }
+      }
+      await buddy.close();
+    } catch (e) {
+      console.error('Error:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
+
+program
   .command('forms <url>')
   .description('Analyze forms on a page')
   .option('--json', 'Output in JSON format')
