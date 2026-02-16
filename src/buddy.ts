@@ -41,6 +41,13 @@ export interface FormResult {
   inputs: FormInput[];
 }
 
+export interface CrawlResult {
+  url: string;
+  status: number;
+  links: string[];
+  error?: string;
+}
+
 export class Buddy {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
@@ -49,6 +56,13 @@ export class Buddy {
   private static readonly MAX_CONSOLE_ERRORS = 1000;
 
   constructor(private config: BuddyConfig = {}) { }
+
+  private async ensurePage(headless: boolean = true, session?: string) {
+    if (!this.page) {
+      await this.launch(headless, session);
+    }
+    if (!this.page) throw new Error('Page failed to initialize');
+  }
 
   async launchInteractive(startUrl?: string) {
     console.log('Launching interactive session...');
@@ -463,11 +477,7 @@ export class Buddy {
     session?: string
   } = {}): Promise<ExploreResult> {
     try {
-      if (!this.page) {
-        await this.launch(true, options.session);
-      }
-
-      if (!this.page) throw new Error('Page failed to initialize');
+      await this.ensurePage(true, options.session);
 
       console.log(`Navigating to ${url}...`);
       await this.navigate(url);
@@ -561,10 +571,7 @@ export class Buddy {
 
   async analyzeForms(url: string, options: { json?: boolean, session?: string } = {}): Promise<FormResult[]> {
     try {
-      if (!this.page) {
-        await this.launch(true, options.session);
-      }
-      if (!this.page) throw new Error('Page failed to initialize');
+      await this.ensurePage(true, options.session);
 
       console.log(`Navigating to ${url}...`);
       await this.navigate(url);
@@ -656,5 +663,95 @@ export class Buddy {
       console.error('Analyze forms failed:', e);
       throw e;
     }
+  }
+
+  async crawl(startUrl: string, maxDepth: number = 2): Promise<CrawlResult[]> {
+    await this.ensurePage(true);
+
+    console.log(`Starting crawl from ${startUrl} with depth ${maxDepth}...`);
+
+    const rootUrl = new URL(startUrl);
+    const origin = rootUrl.origin;
+
+    const normalize = (u: string) => {
+      try {
+        const urlObj = new URL(u);
+        urlObj.hash = ''; // Strip hash
+        let normalized = urlObj.href;
+        if (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
+        return normalized;
+      } catch {
+        return u;
+      }
+    };
+
+    const visited = new Set<string>();
+    const results: CrawlResult[] = [];
+    const queue: { url: string; depth: number }[] = [{ url: startUrl, depth: 0 }];
+
+    visited.add(normalize(startUrl));
+
+    while (queue.length > 0) {
+      const { url, depth } = queue.shift()!;
+
+      console.log(`Crawling: ${url} (Depth: ${depth})`);
+
+      try {
+        const response = await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        const status = response ? response.status() : 0;
+
+        let links: string[] = [];
+        let internalLinks: string[] = [];
+
+        if (status >= 200 && status < 300) {
+          links = await this.page.$$eval('a', (anchors) =>
+            anchors.map(a => a.href).filter(href => href.startsWith('http'))
+          );
+
+          // Add to results
+          const uniqueLinks = Array.from(new Set(links));
+
+          results.push({
+            url: url,
+            status: status,
+            links: uniqueLinks
+          });
+
+          // Filter for next steps
+          internalLinks = links.filter(link => {
+            try {
+              return new URL(link).origin === origin;
+            } catch { return false; }
+          });
+        } else {
+           results.push({
+            url: url,
+            status: status,
+            links: []
+          });
+        }
+
+        if (depth < maxDepth) {
+          for (const link of internalLinks) {
+            const normLink = normalize(link);
+            if (!visited.has(normLink)) {
+              visited.add(normLink);
+              queue.push({ url: link, depth: depth + 1 });
+            }
+          }
+        }
+
+      } catch (e: any) {
+        console.error(`Failed to crawl ${url}:`, e.message);
+        results.push({
+          url: url,
+          status: 0,
+          links: [],
+          error: e.message
+        });
+      }
+    }
+
+    return results;
   }
 }

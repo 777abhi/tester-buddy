@@ -134,6 +134,18 @@ npm run buddy -- forms https://www.saucedemo.com/ --json
 -   Form groups.
 -   Input types, names, IDs, required status, and current values.
 
+### 🗺️ Site Mapping
+
+Use the `crawl` command to map out a website's structure and find broken links.
+
+```bash
+npm run buddy -- crawl https://www.saucedemo.com/ --depth 2
+```
+
+**Options:**
+-   `--depth <number>`: How deep to crawl (default: 2).
+-   `--json`: Output results in JSON format.
+
 ### 🧠 Persistent Memory for Agents
 
 Agents can maintain "state" across different command executions using the `--session` flag.
@@ -188,10 +200,15 @@ You can pre-define mocked network responses and user roles in `buddy.config.json
 We are actively working on making Tester Buddy even more powerful. Here is what is coming next:
 
 ### 🚀 Proposed Agentic Capabilities
-- [ ] **Site Crawling & Mapping (`crawl`)**:
+- [x] **Site Crawling & Mapping (`crawl`)**:
     - **Goal**: Allow agents to autonomous map out an application without manually navigating every link.
     - **Usage**: `npm run buddy -- crawl https://www.saucedemo.com/ --depth 2`
     - **Benefits**: Automatically discovers all reachable pages, reports broken links (404s), and generates a "sitemap" JSON.
+
+- [ ] **Visual Sitemap Generator**:
+    - **Goal**: Generate a visual graph (e.g., DOT/Mermaid) of the crawled site structure.
+    -   **Usage**: `npm run buddy -- crawl <url> --visual`
+    -   **Benefits**: Visualize site architecture and link flow.
 
 - [ ] **Test Code Generation (`codegen`)**:
     - **Goal**: Directly convert an exploration session into a robust Playwright test file.
