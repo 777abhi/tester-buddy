@@ -149,8 +149,7 @@ program
       }
 
       if (options.seedItems) {
-        // Mock endpoint
-        await buddy.seedData('https://api.example.com/items', { count: options.seedItems });
+        await buddy.seedData(options.seedItems);
       }
 
       // If open, we want to keep the process alive until user closes it or we can provide a command to run audit.
