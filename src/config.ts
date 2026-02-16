@@ -25,9 +25,16 @@ export interface MockConfig {
   response: MockResponse;
 }
 
+export interface SeedConfig {
+  url: string;
+  method?: string; // Default POST
+  headers?: Record<string, string>;
+}
+
 export interface BuddyConfig {
   roles?: Record<string, RoleConfig>;
   mocks?: MockConfig[];
+  seeding?: SeedConfig;
 }
 
 export class ConfigLoader {

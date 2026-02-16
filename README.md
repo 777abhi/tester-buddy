@@ -59,6 +59,9 @@ Stop manually logging in every time you restart testing.
 
 #### 2. Mock Data Seeding
 Need a specific data state? Seed it instantly (requires backend configuration).
+
+This command sends a request to the endpoint configured in `buddy.config.json` under `seeding`.
+
 ```bash
 npm run buddy -- --open --seed-items 50
 ```
@@ -171,7 +174,12 @@ You can pre-define mocked network responses and user roles in `buddy.config.json
       "method": "GET",
       "response": { "status": 200, "body": { "id": 1 } }
     }
-  ]
+  ],
+  "seeding": {
+    "url": "http://localhost:3000/api/seed",
+    "method": "POST",
+    "headers": { "Authorization": "Bearer super-secret" }
+  }
 }
 ```
 

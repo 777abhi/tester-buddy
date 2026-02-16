@@ -191,19 +191,32 @@ export class Buddy {
     console.log('State injected (fallback).');
   }
 
-  async seedData(endpoint: string, payload: any) {
-    console.log(`Seeding data to ${endpoint}...`);
-    // Using a separate request context for API calls
+  async seedData(count: number) {
+    const seedConfig = this.config.seeding;
+
+    if (!seedConfig) {
+      console.warn('No seeding configuration found. Using mock implementation.');
+      console.log(`Mock: Seeding ${count} items...`);
+      console.log('Mock: Data seeded successfully.');
+      return;
+    }
+
+    console.log(`Seeding data to ${seedConfig.url}...`);
     const apiContext = await request.newContext();
 
     try {
-      // In a real scenario, we would post to the endpoint
-      // const response = await apiContext.post(endpoint, { data: payload });
-      // console.log(`Response status: ${response.status()}`);
+      const response = await apiContext.fetch(seedConfig.url, {
+        method: seedConfig.method || 'POST',
+        headers: seedConfig.headers,
+        data: { count }
+      });
 
-      // Mocking the action for the MVP
-      console.log('Mock: Sending payload:', JSON.stringify(payload));
-      console.log('Mock: Data seeded successfully.');
+      if (response.ok()) {
+        console.log(`Data seeded successfully. Status: ${response.status()}`);
+      } else {
+        console.error(`Failed to seed data. Status: ${response.status()} ${response.statusText()}`);
+        console.error(await response.text());
+      }
     } catch (error) {
       console.error('Error seeding data:', error);
     } finally {
