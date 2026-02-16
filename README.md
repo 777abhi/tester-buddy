@@ -6,6 +6,10 @@ Tester Buddy is a CLI-based utility designed to bridge the gap between manual ex
 
 ---
 
+**[📚 Click here for a Comprehensive Demo Guide & Examples](./Examples.md)**
+
+---
+
 ## Installation
 
 Ensure you have Node.js installed (v16+ recommended).
