@@ -167,13 +167,7 @@ npm run buddy -- forms https://www.saucedemo.com/checkout-step-one.html --sessio
 ]
 ```
 
-### Scenario E: Generating a Regression Test
-Agent converts its successful exploration into a permanent test file.
 
-```bash
-npm run buddy -- codegen --title "SauceDemo Checkout Flow" --out tests/checkout.spec.ts
-```
-*(Proposed Feature)*
 
 ---
 
@@ -181,45 +175,7 @@ npm run buddy -- codegen --title "SauceDemo Checkout Flow" --out tests/checkout.
 
 See how Tester Buddy handles diverse web elements and app styles.
 
-### 1. The Internet (Herokuapp) - Dynamic Controls
-Testing asynchronous UI changes (waiting for elements to appear/disappear).
-**URL:** [https://the-internet.herokuapp.com/dynamic_controls](https://the-internet.herokuapp.com/dynamic_controls)
-
-```bash
-npm run buddy -- explore https://the-internet.herokuapp.com/dynamic_controls \
-  --do "click:#checkbox" \
-  --do "click:#btn" \
-  --do "wait:3000" \
-  --expect "text:It's gone!"
-```
-
-### 2. TodoMVC (React) - Double Click & State
-Testing complex interactions like double-clicking to edit.
-**URL:** [https://demo.playwright.dev/todomvc/](https://demo.playwright.dev/todomvc/)
-
-```bash
-# Add a todo item
-npm run buddy -- explore https://demo.playwright.dev/todomvc/ \
-  --do "fill:.new-todo:Buy Milk" \
-  --do "click:.new-todo" \
-  --expect "text:Buy Milk"
-```
-
-### 3. Automation Exercise - Contact Form
-Filling a multi-field contact form and uploading a file.
-**URL:** [https://automationexercise.com/contact_us](https://automationexercise.com/contact_us)
-
-```bash
-npm run buddy -- explore https://automationexercise.com/contact_us \
-  --do "fill:[name='name']:Tester" \
-  --do "fill:[name='email']:test@example.com" \
-  --do "fill:[name='subject']:Feedback" \
-  --do "fill:#message:Great tool!" \
-  --do "click:[name='submit']" \
-  --expect "text:Success! Your details have been submitted successfully."
-```
-
-### 4. Wikipedia - Search Flow
+### 1. Wikipedia - Search Flow
 **Scenario**: searching for a topic and verifying the result page.
 **URL:** [https://www.wikipedia.org/](https://www.wikipedia.org/)
 
@@ -228,16 +184,6 @@ npm run buddy -- explore https://www.wikipedia.org/ \
   --do "fill:#searchInput:Software testing" \
   --do "click:.pure-button-primary-progressive" \
   --expect "text:Software testing"
-```
-
-### 5. Hacker News - Navigation
-**Scenario**: Verifying navigation between "Top" and "New" stories.
-**URL:** [https://news.ycombinator.com/](https://news.ycombinator.com/)
-
-```bash
-npm run buddy -- explore https://news.ycombinator.com/ \
-  --do "click:text=new" \
-  --expect "url:newest"
 ```
 
 ---
