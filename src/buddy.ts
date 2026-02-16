@@ -491,13 +491,13 @@ export class Buddy {
       }
 
       if (options.screenshot) {
-        await this.page.screenshot({ path: 'screenshot.png', fullPage: false });
+        await this.page!.screenshot({ path: 'screenshot.png', fullPage: false });
         if (!options.json) {
           console.error('Screenshot saved to screenshot.png');
         }
       }
 
-      const data: ExploreResult = await this.page.evaluate(() => {
+      const data: ExploreResult = await this.page!.evaluate(() => {
         const selectors = [
           "button", "a", "input", "select", "textarea",
           "[role='button']", "[role='link']",
@@ -576,7 +576,7 @@ export class Buddy {
       console.log(`Navigating to ${url}...`);
       await this.navigate(url);
 
-      const forms: FormResult[] = await this.page.evaluate(() => {
+      const forms: FormResult[] = await this.page!.evaluate(() => {
         const forms = Array.from(document.querySelectorAll('form'));
         const results: any[] = [];
 
@@ -697,14 +697,14 @@ export class Buddy {
       console.log(`Crawling: ${url} (Depth: ${depth})`);
 
       try {
-        const response = await this.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        const response = await this.page!.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         const status = response ? response.status() : 0;
 
         let links: string[] = [];
         let internalLinks: string[] = [];
 
         if (status >= 200 && status < 300) {
-          links = await this.page.$$eval('a', (anchors) =>
+          links = await this.page!.$$eval('a', (anchors) =>
             anchors.map(a => a.href).filter(href => href.startsWith('http'))
           );
 
@@ -724,7 +724,7 @@ export class Buddy {
             } catch { return false; }
           });
         } else {
-           results.push({
+          results.push({
             url: url,
             status: status,
             links: []
