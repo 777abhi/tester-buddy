@@ -25,7 +25,10 @@ describe("Buddy Network Mocking", () => {
         mockPage = {
             route: mock(() => { }),
         };
-        (buddy as any).page = mockPage;
+        (buddy as any).browserManager = {
+            getPage: () => mockPage,
+            ensurePage: async () => mockPage,
+        };
     });
 
     it("should register routes from config", async () => {
