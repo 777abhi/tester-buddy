@@ -15,8 +15,11 @@ describe("Buddy.injectState", () => {
       evaluate: async () => {},
     };
     // Accessing private members for testing purposes
-    (buddy as any).context = mockContext;
-    (buddy as any).page = mockPage;
+    (buddy as any).browserManager = {
+      getContext: () => mockContext,
+      getPage: () => mockPage,
+      ensurePage: async () => mockPage,
+    };
   });
 
   it("should catch and log error when addCookies fails", async () => {

@@ -12,3 +12,8 @@ Constraint: Ensure `applyMocks` handles multiple mocks correctly and falls back 
 Decision: Implement `crawl` feature within `Buddy` class using Breadth-First Search (BFS) and queue.
 Reasoning: Simple and effective way to map site structure and find broken links without complex recursive state management.
 Constraint: Ensure `visited` set normalizes URLs (stripping fragments) to avoid duplicate crawling.
+
+## 2025-02-18 - Network & Console Monitoring
+Decision: Integrated passive monitoring of console errors and network failures (4xx/5xx) into `BrowserManager`.
+Reasoning: Allows agents and testers to catch "invisible" bugs that don't manifest in the UI but indicate underlying issues. This is exposed via the `--monitor-errors` flag.
+Constraint: Ensure monitoring is optional and errors are collected silently until the exploration step completes, preventing interruption of partial flows unless explicitly checked.

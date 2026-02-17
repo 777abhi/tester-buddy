@@ -205,6 +205,11 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Usage**: `npm run buddy -- crawl https://www.saucedemo.com/ --depth 2`
     - **Benefits**: Automatically discovers all reachable pages, reports broken links (404s), and generates a "sitemap" JSON.
 
+- [x] **Network & Console Monitoring**:
+    - **Goal**: Catch invisible functionality bugs (API failures, JS errors) during exploration.
+    - **Usage**: `npm run buddy -- explore <url> --monitor-errors`
+    - **Benefits**: Fails if network requests error (4xx/5xx) or console errors occur, detecting issues visible UI might miss.
+
 - [ ] **Visual Sitemap Generator**:
     - **Goal**: Generate a visual graph (e.g., DOT/Mermaid) of the crawled site structure.
     -   **Usage**: `npm run buddy -- crawl <url> --visual`
@@ -214,11 +219,6 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Goal**: Directly convert an exploration session into a robust Playwright test file.
     - **Usage**: `npm run buddy -- codegen --session ./my-session.json --out tests/new-flow.spec.ts`
     - **Benefits**: Removes boilerplate, ensures selector consistency, and includes expectations automatically.
-
-- [ ] **Network & Console Monitoring**:
-    - **Goal**: Catch invisible functionality bugs (API failures, JS errors) during exploration.
-    - **Usage**: `npm run buddy -- explore <url> --monitor-errors`
-    - **Benefits**: Fails if network requests error (4xx/5xx) or console errors occur, detecting issues visible UI might miss.
 
 - [ ] **Visual Change Detection**:
     - **Goal**: Help agents "see" unplanned visual changes.
@@ -286,6 +286,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 - [ ] **Arbitrary Script Execution**: run a provided Playwright script string.
 - [ ] **Element Screenshot**: capture just a specific element as base64.
 - [ ] **Tree-Based Exploration**: explore DOM by traversing children/parent nodes.
+- [ ] **Performance Metrics**: capture Core Web Vitals (LCP, CLS, FID) for the explored page.
 
 ---
 

@@ -5,11 +5,15 @@ export class BrowserManager {
   private context: BrowserContext | null = null;
   private page: Page | null = null;
   private consoleErrors: string[] = [];
+  private networkErrors: string[] = [];
   private static readonly MAX_CONSOLE_ERRORS = 1000;
 
   async launch(headless: boolean = true, storageState?: string) {
     console.log(`Launching browser (headless: ${headless})...`);
-    this.browser = await chromium.launch({ headless });
+    this.browser = await chromium.launch({
+      headless,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
 
     if (storageState) {
       try {
@@ -24,7 +28,7 @@ export class BrowserManager {
 
     this.page = await this.context.newPage();
     this.page.setDefaultTimeout(60000);
-    this.setupConsoleListener();
+    this.setupListeners();
   }
 
   async launchInteractive(startUrl?: string) {
@@ -39,7 +43,7 @@ export class BrowserManager {
 
     this.page = await this.context.newPage();
     
-    this.setupConsoleListener();
+    this.setupListeners();
 
     // Long timeout for manual testing
     this.page.setDefaultTimeout(0);
@@ -52,14 +56,25 @@ export class BrowserManager {
     }
   }
 
-  private setupConsoleListener() {
-      if (!this.page) return;
-      
-      this.page.on('console', msg => {
+  private setupListeners() {
+    if (!this.page) return;
+
+    this.page.on('console', msg => {
       if (msg.type() === 'error') {
         this.consoleErrors.push(msg.text());
         if (this.consoleErrors.length > BrowserManager.MAX_CONSOLE_ERRORS) {
           this.consoleErrors.shift();
+        }
+      }
+    });
+
+    this.page.on('response', response => {
+      const status = response.status();
+      if (status >= 400) {
+        const errorMsg = `[${status}] ${response.request().method()} ${response.url()}`;
+        this.networkErrors.push(errorMsg);
+        if (this.networkErrors.length > BrowserManager.MAX_CONSOLE_ERRORS) {
+          this.networkErrors.shift();
         }
       }
     });
@@ -83,6 +98,15 @@ export class BrowserManager {
 
   getConsoleErrors(): string[] {
     return this.consoleErrors;
+  }
+
+  getNetworkErrors(): string[] {
+    return this.networkErrors;
+  }
+
+  clearErrors() {
+    this.consoleErrors = [];
+    this.networkErrors = [];
   }
 
   async close() {

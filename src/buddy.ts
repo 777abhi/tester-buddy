@@ -14,9 +14,9 @@ import {
   FormResult
 } from './features'; // Using barrel file
 
-export { ExploreResult, InteractiveElement } from './features/explorer';
-export { CrawlResult } from './features/crawler';
-export { FormResult, FormInput } from './features/forms'; 
+export type { ExploreResult, InteractiveElement } from './features/explorer';
+export type { CrawlResult } from './features/crawler';
+export type { FormResult, FormInput } from './features/forms';
 
 export class Buddy {
   private browserManager: BrowserManager;
@@ -116,10 +116,15 @@ export class Buddy {
     showAll?: boolean,
     actions?: string[],
     expectations?: string[],
-    session?: string
+    session?: string,
+    monitorErrors?: boolean
   } = {}): Promise<ExploreResult> {
     try {
       const page = await this.browserManager.ensurePage(true, options.session);
+
+      if (options.monitorErrors) {
+        this.browserManager.clearErrors();
+      }
 
       console.log(`Navigating to ${url}...`);
       await page.goto(url);
@@ -140,6 +145,19 @@ export class Buddy {
       }
 
       const data = await this.explorer.scrape(page);
+
+      if (options.monitorErrors) {
+        const consoleErrors = this.browserManager.getConsoleErrors();
+        const networkErrors = this.browserManager.getNetworkErrors();
+
+        if (consoleErrors.length > 0 || networkErrors.length > 0) {
+          const errorMessages = [
+            ...consoleErrors.map(e => `Console Error: ${e}`),
+            ...networkErrors.map(e => `Network Error: ${e}`)
+          ];
+          throw new Error(`Monitoring failed with ${errorMessages.length} errors:\n${errorMessages.join('\n')}`);
+        }
+      }
 
       if (options.session) {
         try {

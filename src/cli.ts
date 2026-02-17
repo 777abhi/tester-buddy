@@ -19,6 +19,7 @@ program
   .option('--do <action>', 'Action to perform: click:selector, fill:selector:value, wait:ms, goto:url. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
   .option('--expect <criteria>', 'Expectation to verify: text:value, selector:value, url:value. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
   .option('--session <path>', 'Path to session file (JSON) to save/load state')
+  .option('--monitor-errors', 'Fail if console errors or network errors (4xx/5xx) occur')
   .action(async (url, options) => {
     try {
       const config = await ConfigLoader.load();
@@ -29,7 +30,8 @@ program
         showAll: options.showAll,
         actions: options.do,
         expectations: options.expect,
-        session: options.session
+        session: options.session,
+        monitorErrors: options.monitorErrors
       });
 
       if (options.json) {
