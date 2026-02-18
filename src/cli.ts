@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { Buddy } from './buddy';
 import { ConfigLoader } from './config';
+import { generateMermaidGraph } from './features';
 
 const program = new Command();
 let buddy: Buddy | undefined;
@@ -82,6 +83,7 @@ program
   .description('Crawl a website and map its structure')
   .option('--depth <number>', 'Depth of crawl (default: 2)', parseInt, 2)
   .option('--json', 'Output in JSON format')
+  .option('--visual', 'Output visual graph (Mermaid)')
   .action(async (url, options) => {
     try {
       const config = await ConfigLoader.load();
@@ -90,6 +92,9 @@ program
 
       if (options.json) {
         console.log(JSON.stringify(results, null, 2));
+      } else if (options.visual) {
+        const graph = generateMermaidGraph(results);
+        console.log(graph);
       } else {
         console.log(`\nCrawling complete. Found ${results.length} pages.\n`);
 
