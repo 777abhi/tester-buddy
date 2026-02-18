@@ -210,7 +210,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Usage**: `npm run buddy -- explore <url> --monitor-errors`
     - **Benefits**: Fails if network requests error (4xx/5xx) or console errors occur, detecting issues visible UI might miss.
 
-- [ ] **Visual Sitemap Generator**:
+- [x] **Visual Sitemap Generator**:
     - **Goal**: Generate a visual graph (e.g., DOT/Mermaid) of the crawled site structure.
     -   **Usage**: `npm run buddy -- crawl <url> --visual`
     -   **Benefits**: Visualize site architecture and link flow.
@@ -287,6 +287,10 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 - [ ] **Element Screenshot**: capture just a specific element as base64.
 - [ ] **Tree-Based Exploration**: explore DOM by traversing children/parent nodes.
 - [ ] **Performance Metrics**: capture Core Web Vitals (LCP, CLS, FID) for the explored page.
+- [ ] **Automated Flakiness Detection**:
+    - **Goal**: Run the same command multiple times to detect flaky tests or network conditions.
+    - **Usage**: `npm run buddy -- flake-check <url> --runs 10`
+    - **Benefits**: Helps identify unreliable tests before they break CI pipelines.
 
 ---
 

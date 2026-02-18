@@ -17,3 +17,8 @@ Constraint: Ensure `visited` set normalizes URLs (stripping fragments) to avoid 
 Decision: Integrated passive monitoring of console errors and network failures (4xx/5xx) into `BrowserManager`.
 Reasoning: Allows agents and testers to catch "invisible" bugs that don't manifest in the UI but indicate underlying issues. This is exposed via the `--monitor-errors` flag.
 Constraint: Ensure monitoring is optional and errors are collected silently until the exploration step completes, preventing interruption of partial flows unless explicitly checked.
+
+## 2025-02-18 - Visual Sitemap Generator
+Decision: Implemented `generateMermaidGraph` as a pure function utility in `src/features/visualizer.ts` decoupled from `Crawler` logic.
+Reasoning: Keeps core crawling logic clean and focused on data collection. Visualization is treated as a presentation layer transformation.
+Constraint: Large crawl results might generate huge Mermaid graphs; future improvements should consider pagination or file output.
