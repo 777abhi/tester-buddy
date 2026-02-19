@@ -66,6 +66,41 @@ export class GotoAction implements ActionStrategy {
   }
 }
 
+export class PressAction implements ActionStrategy {
+  matches(actionType: string): boolean {
+    return actionType === 'press';
+  }
+
+  async execute(page: Page, key: string): Promise<void> {
+    console.log(`Pressing key: ${key}`);
+    await page.keyboard.press(key);
+  }
+}
+
+export class ScrollAction implements ActionStrategy {
+  matches(actionType: string): boolean {
+    return actionType === 'scroll';
+  }
+
+  async execute(page: Page, target: string): Promise<void> {
+    if (target === 'top') {
+      console.log(`Scrolling to top`);
+      await page.evaluate(() => window.scrollTo(0, 0));
+    } else if (target === 'bottom') {
+      console.log(`Scrolling to bottom`);
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    } else {
+      console.log(`Scrolling to selector: ${target}`);
+      const el = await page.$(target);
+      if (el) {
+        await el.scrollIntoViewIfNeeded();
+      } else {
+        console.warn(`Element not found for scrolling: ${target}`);
+      }
+    }
+  }
+}
+
 // --- Expectations ---
 
 export class TextExpectation implements ExpectationStrategy {
