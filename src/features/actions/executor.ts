@@ -1,13 +1,15 @@
 import { Page } from 'playwright';
 import { ActionStrategy, ExpectationStrategy } from './types';
-import { ClickAction, FillAction, WaitAction, GotoAction, TextExpectation, SelectorExpectation, UrlExpectation } from './strategies';
+import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, TextExpectation, SelectorExpectation, UrlExpectation } from './strategies';
 
 export class ActionExecutor {
   private actions: ActionStrategy[] = [
     new ClickAction(),
     new FillAction(),
     new WaitAction(),
-    new GotoAction()
+    new GotoAction(),
+    new PressAction(),
+    new ScrollAction()
   ];
 
   private expectations: ExpectationStrategy[] = [
