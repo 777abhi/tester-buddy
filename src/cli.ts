@@ -21,6 +21,7 @@ program
   .option('--expect <criteria>', 'Expectation to verify: text:value, selector:value, url:value. Can be repeated.', (value, previous) => previous.concat([value]), [] as string[])
   .option('--session <path>', 'Path to session file (JSON) to save/load state')
   .option('--monitor-errors', 'Fail if console errors or network errors (4xx/5xx) occur')
+  .option('--performance', 'Capture performance metrics')
   .action(async (url, options) => {
     try {
       const config = await ConfigLoader.load();
@@ -32,7 +33,8 @@ program
         actions: options.do,
         expectations: options.expect,
         session: options.session,
-        monitorErrors: options.monitorErrors
+        monitorErrors: options.monitorErrors,
+        performance: options.performance
       });
 
       if (options.json) {
@@ -71,6 +73,16 @@ program
             const alertPrefix = item.isAlert ? "🚨 " : "";
             console.log(`| ${item.tag} | ${alertPrefix}${text} | ${item.id} | ${elClass} | ${aria} |`);
           });
+        }
+
+        if (results.performance) {
+          const p = results.performance;
+          console.log('\n### ⚡ Performance Metrics');
+          console.log(`- **Load Time**: ${p.navigation.loadTime}ms`);
+          console.log(`- **DCL**: ${p.navigation.domContentLoaded}ms`);
+          console.log(`- **First Paint**: ${p.paint.firstPaint}ms`);
+          console.log(`- **FCP**: ${p.paint.firstContentfulPaint}ms`);
+          console.log(`- **Resources**: ${p.resources.count} files, ${(p.resources.totalSize / 1024).toFixed(2)} KB`);
         }
       }
       await buddy.close();

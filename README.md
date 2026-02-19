@@ -146,6 +146,14 @@ npm run buddy -- crawl https://www.saucedemo.com/ --depth 2
 -   `--depth <number>`: How deep to crawl (default: 2).
 -   `--json`: Output results in JSON format.
 
+### ⚡ Performance Analysis
+
+Capture key performance metrics (Load Time, First Paint, Resources) for the page.
+
+```bash
+npm run buddy -- explore https://www.saucedemo.com/ --performance
+```
+
 ### 🧠 Persistent Memory for Agents
 
 Agents can maintain "state" across different command executions using the `--session` flag.
@@ -254,7 +262,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 - [ ] **LocalStorage Viewer**: dump local storage contents to terminal.
 - [ ] **Session Restore**: drag-and-drop a previous session file to restore state.
 - [ ] **Element Highlighter**: target elements with CSS selectors to visualize them on page.
-- [ ] **Performance Metrics**: on-demand measurement of LCP, CLS, and FID.
+- [x] **Performance Metrics**: on-demand measurement of Load Time and First Contentful Paint (FCP).
 - [ ] **PDF Export**: save the current page as a PDF file.
 - [ ] **QR Code Generator**: generate a QR code in terminal for the current URL to open on mobile.
 - [ ] **User Agent Switcher**: cycle through common user agents.
@@ -286,7 +294,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 - [ ] **Arbitrary Script Execution**: run a provided Playwright script string.
 - [ ] **Element Screenshot**: capture just a specific element as base64.
 - [ ] **Tree-Based Exploration**: explore DOM by traversing children/parent nodes.
-- [ ] **Performance Metrics**: capture Core Web Vitals (LCP, CLS, FID) for the explored page.
+- [x] **Performance Metrics**: capture basic performance metrics (Load, FCP, Resources) for the explored page.
 - [ ] **Automated Flakiness Detection**:
     - **Goal**: Run the same command multiple times to detect flaky tests or network conditions.
     - **Usage**: `npm run buddy -- flake-check <url> --runs 10`

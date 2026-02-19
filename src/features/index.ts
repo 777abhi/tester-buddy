@@ -9,3 +9,4 @@ export * from './state';
 export * from './audit';
 export * from './seeder';
 export * from './visualizer';
+export * from './performance';
