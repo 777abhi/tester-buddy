@@ -9,6 +9,7 @@ import {
   StateManager,
   Auditor,
   Seeder,
+  PerformanceMonitor,
   ExploreResult,
   CrawlResult,
   FormResult
@@ -28,6 +29,7 @@ export class Buddy {
   private stateManager: StateManager;
   private auditor: Auditor;
   private seeder: Seeder;
+  private performanceMonitor: PerformanceMonitor;
 
   constructor(private config: BuddyConfig = {}) {
     this.browserManager = new BrowserManager();
@@ -39,6 +41,7 @@ export class Buddy {
     this.stateManager = new StateManager(config);
     this.auditor = new Auditor();
     this.seeder = new Seeder(config);
+    this.performanceMonitor = new PerformanceMonitor();
   }
 
   async launchInteractive(startUrl?: string) {
@@ -117,7 +120,8 @@ export class Buddy {
     actions?: string[],
     expectations?: string[],
     session?: string,
-    monitorErrors?: boolean
+    monitorErrors?: boolean,
+    performance?: boolean
   } = {}): Promise<ExploreResult> {
     try {
       const page = await this.browserManager.ensurePage(true, options.session);
@@ -145,6 +149,10 @@ export class Buddy {
       }
 
       const data = await this.explorer.scrape(page);
+
+      if (options.performance) {
+        data.performance = await this.performanceMonitor.measure(page);
+      }
 
       if (options.monitorErrors) {
         const consoleErrors = this.browserManager.getConsoleErrors();

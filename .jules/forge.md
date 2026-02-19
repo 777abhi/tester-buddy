@@ -22,3 +22,8 @@ Constraint: Ensure monitoring is optional and errors are collected silently unti
 Decision: Implemented `generateMermaidGraph` as a pure function utility in `src/features/visualizer.ts` decoupled from `Crawler` logic.
 Reasoning: Keeps core crawling logic clean and focused on data collection. Visualization is treated as a presentation layer transformation.
 Constraint: Large crawl results might generate huge Mermaid graphs; future improvements should consider pagination or file output.
+
+## 2025-02-18 - Performance Metrics
+Decision: Implemented `PerformanceMonitor` class decoupled from `Explorer` to capture Core Web Vitals and Navigation Timing.
+Reasoning: Separation of concerns allows `Explorer` to focus on DOM structure while `PerformanceMonitor` handles timing and resource metrics. Used `page.evaluate` to bridge to `window.performance`.
+Constraint: Initial implementation uses Navigation Timing Level 2 but falls back to Level 1. LCP/CLS are approximated via `paint` entries and `navigation` timing for this MVP.

@@ -1,4 +1,5 @@
 import { Page } from 'playwright';
+import { PerformanceMetrics } from './performance';
 
 export interface InteractiveElement {
   tag: string;
@@ -20,6 +21,7 @@ export interface ExploreResult {
   url: string;
   title: string;
   elements: InteractiveElement[];
+  performance?: PerformanceMetrics;
 }
 
 export class Explorer {
