@@ -10,3 +10,5 @@ export * from './audit';
 export * from './seeder';
 export * from './visualizer';
 export * from './performance';
+export * from './session';
+export * from './codegen';

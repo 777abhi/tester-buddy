@@ -8,7 +8,7 @@ export class BrowserManager {
   private networkErrors: string[] = [];
   private static readonly MAX_CONSOLE_ERRORS = 1000;
 
-  async launch(headless: boolean = true, storageState?: string) {
+  async launch(headless: boolean = true, storageState?: string | { cookies: any[], origins: any[] }) {
     console.log(`Launching browser (headless: ${headless})...`);
     this.browser = await chromium.launch({
       headless,
@@ -19,7 +19,8 @@ export class BrowserManager {
       try {
         this.context = await this.browser.newContext({ storageState });
       } catch (e) {
-        console.warn(`Could not load storage state from ${storageState}, starting fresh context. Error:`, e);
+        const errorMsg = typeof storageState === 'string' ? storageState : 'provided object';
+        console.warn(`Could not load storage state from ${errorMsg}, starting fresh context. Error:`, e);
         this.context = await this.browser.newContext();
       }
     } else {
@@ -80,7 +81,7 @@ export class BrowserManager {
     });
   }
 
-  async ensurePage(headless: boolean = true, session?: string) {
+  async ensurePage(headless: boolean = true, session?: string | { cookies: any[], origins: any[] }) {
     if (!this.page) {
       await this.launch(headless, session);
     }

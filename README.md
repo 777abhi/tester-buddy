@@ -153,6 +153,22 @@ Capture key performance metrics (Load Time, First Paint, Resources) for the page
 npm run buddy -- scout explore https://www.saucedemo.com/ --performance
 ```
 
+### ✍️ Test Generation
+
+Convert your exploration session into a permanent Playwright test script.
+
+1.  **Explore and Record:**
+    Run `scout explore` commands with the `--session` flag. Every action (`--do`) is recorded.
+    ```bash
+    npm run buddy -- scout explore https://example.com --session session.json
+    npm run buddy -- scout explore https://example.com --do "click:#btn" --session session.json
+    ```
+
+2.  **Generate Code:**
+    ```bash
+    npm run buddy -- codegen --session session.json --out tests/my-flow.spec.ts
+    ```
+
 ### 🧠 Persistent Memory for Agents
 
 Agents can maintain "state" across different command executions using the `--session` flag.
@@ -221,7 +237,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     -   **Usage**: `npm run buddy -- scout crawl <url> --visual`
     -   **Benefits**: Visualize site architecture and link flow.
 
-- [ ] **Test Code Generation (`codegen`)**:
+- [x] **Test Code Generation (`codegen`)**:
     - **Goal**: Directly convert an exploration session into a robust Playwright test file.
     - **Usage**: `npm run buddy -- codegen --session ./my-session.json --out tests/new-flow.spec.ts`
     - **Benefits**: Removes boilerplate, ensures selector consistency, and includes expectations automatically.
@@ -297,6 +313,11 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Goal**: Run the same command multiple times to detect flaky tests or network conditions.
     - **Usage**: `npm run buddy -- flake-check <url> --runs 10`
     - **Benefits**: Helps identify unreliable tests before they break CI pipelines.
+
+- [ ] **Semantic Test Generation**:
+    - **Goal**: Generate tests using user-centric locators (`getByRole`, `getByText`) instead of CSS selectors for greater resilience.
+    - **Usage**: `npm run buddy -- codegen --semantic`
+    - **Benefits**: Tests are less brittle and more readable.
 
 ---
 

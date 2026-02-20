@@ -10,6 +10,8 @@ import {
   Auditor,
   Seeder,
   PerformanceMonitor,
+  SessionManager,
+  ActionRecord,
   ExploreResult,
   CrawlResult,
   FormResult
@@ -30,6 +32,7 @@ export class Buddy {
   private auditor: Auditor;
   private seeder: Seeder;
   private performanceMonitor: PerformanceMonitor;
+  private sessionManager: SessionManager;
 
   constructor(private config: BuddyConfig = {}) {
     this.browserManager = new BrowserManager();
@@ -42,6 +45,7 @@ export class Buddy {
     this.auditor = new Auditor();
     this.seeder = new Seeder(config);
     this.performanceMonitor = new PerformanceMonitor();
+    this.sessionManager = new SessionManager();
   }
 
   async launchInteractive(startUrl?: string) {
@@ -124,21 +128,52 @@ export class Buddy {
     performance?: boolean
   } = {}): Promise<ExploreResult> {
     try {
-      const page = await this.browserManager.ensurePage(true, options.session);
+      let history: ActionRecord[] = [];
+      let storageState: any = options.session;
+
+      if (options.session) {
+        const sessionData = await this.sessionManager.loadSession(options.session);
+        history = sessionData.history;
+        storageState = { cookies: sessionData.cookies, origins: sessionData.origins };
+      }
+
+      const page = await this.browserManager.ensurePage(true, storageState);
 
       if (options.monitorErrors) {
         this.browserManager.clearErrors();
       }
+
+      // Record navigation
+      history.push({
+        action: `goto:${url}`,
+        timestamp: Date.now()
+      });
 
       console.log(`Navigating to ${url}...`);
       await page.goto(url);
 
       if (options.actions && options.actions.length > 0) {
         await this.actionExecutor.performActions(page, options.actions);
+        // Record actions
+        for (const act of options.actions) {
+          history.push({
+            action: act,
+            timestamp: Date.now(),
+            url: page.url()
+          });
+        }
       }
 
       if (options.expectations && options.expectations.length > 0) {
         await this.actionExecutor.checkExpectations(page, options.expectations);
+        // Record expectations
+        for (const exp of options.expectations) {
+          history.push({
+            action: `expect:${exp}`,
+            timestamp: Date.now(),
+            url: page.url()
+          });
+        }
       }
 
       if (options.screenshot) {
@@ -170,7 +205,7 @@ export class Buddy {
       if (options.session) {
         try {
           const context = this.browserManager.getContext();
-          if (context) await context.storageState({ path: options.session });
+          if (context) await this.sessionManager.saveSession(options.session, context, history);
         } catch (e) {
           console.warn('Could not save session:', e);
         }
@@ -186,7 +221,16 @@ export class Buddy {
 
   async analyzeForms(url: string, options: { json?: boolean, session?: string } = {}): Promise<FormResult[]> {
     try {
-      const page = await this.browserManager.ensurePage(true, options.session);
+      let storageState: any = options.session;
+      let history: ActionRecord[] = [];
+
+      if (options.session) {
+        const sessionData = await this.sessionManager.loadSession(options.session);
+        storageState = { cookies: sessionData.cookies, origins: sessionData.origins };
+        history = sessionData.history;
+      }
+
+      const page = await this.browserManager.ensurePage(true, storageState);
 
       console.log(`Navigating to ${url}...`);
       await page.goto(url);
@@ -196,7 +240,8 @@ export class Buddy {
       if (options.session) {
         try {
           const context = this.browserManager.getContext();
-          if (context) await context.storageState({ path: options.session });
+          // We preserve history but don't append anything for forms command
+          if (context) await this.sessionManager.saveSession(options.session, context, history);
         } catch (e) {
           console.warn('Could not save session:', e);
         }
