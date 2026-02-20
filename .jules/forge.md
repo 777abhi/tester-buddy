@@ -27,3 +27,8 @@ Constraint: Large crawl results might generate huge Mermaid graphs; future impro
 Decision: Implemented `PerformanceMonitor` class decoupled from `Explorer` to capture Core Web Vitals and Navigation Timing.
 Reasoning: Separation of concerns allows `Explorer` to focus on DOM structure while `PerformanceMonitor` handles timing and resource metrics. Used `page.evaluate` to bridge to `window.performance`.
 Constraint: Initial implementation uses Navigation Timing Level 2 but falls back to Level 1. LCP/CLS are approximated via `paint` entries and `navigation` timing for this MVP.
+
+## 2025-02-18 - Test Code Generation (Codegen)
+Decision: Implemented `SessionManager` to handle custom session format (state + history) and `CodeGenerator` to transform history into Playwright test scripts.
+Reasoning: Enables agents and manual testers to convert exploration sessions into permanent test artifacts, bridging the gap between exploration and regression testing.
+Constraint: `scout explore` now records every `goto` and `--do` action when `--session` is used. The `CodeGenerator` handles basic deduplication of consecutive navigations.

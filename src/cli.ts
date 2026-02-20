@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import { Buddy } from './buddy';
 import { ConfigLoader } from './config';
-import { generateMermaidGraph } from './features';
+import { generateMermaidGraph, SessionManager, CodeGenerator } from './features';
+import { writeFileSync } from 'fs';
 
 const program = new Command();
 let buddy: Buddy | undefined;
@@ -259,5 +260,36 @@ process.on('SIGTERM', async () => {
   await cleanup();
   process.exit(0);
 });
+
+program
+  .command('codegen')
+  .description('Generate Playwright test code from a session')
+  .requiredOption('--session <path>', 'Path to session file (JSON)')
+  .option('--out <path>', 'Path to output file (default: stdout)')
+  .action(async (options) => {
+    try {
+      const sessionPath = options.session;
+      const outputPath = options.out;
+
+      const sessionManager = new SessionManager();
+      const sessionData = await sessionManager.loadSession(sessionPath);
+
+      if (sessionData.history.length === 0) {
+        console.warn('Session has no history actions.');
+      }
+
+      const code = CodeGenerator.generate(sessionData.history);
+
+      if (outputPath) {
+        writeFileSync(outputPath, code);
+        console.log(`Test code generated at: ${outputPath}`);
+      } else {
+        console.log(code);
+      }
+    } catch (e) {
+      console.error('Codegen failed:', e);
+      process.exit(1);
+    }
+  });
 
 program.parse();

@@ -67,9 +67,18 @@ Check the JSON output of the action command.
 
 ## Writing Playwright Tests
 
-Once you have explored a flow, you can generate a Playwright TypeScript test.
+You can automatically generate a Playwright test script from your exploration session.
 
-**Prompt Template:**
+1.  **Ensure you used `--session <file>`** during your exploration.
+2.  **Run Codegen:**
+    ```bash
+    npm run buddy -- codegen --session session.json --out tests/generated.spec.ts
+    ```
+3.  **Refine:**
+    Read the generated file and refine assertions if necessary.
+
+**Legacy Method (Manual Prompting):**
+
 "Based on the exploration of [URL], write a Playwright test in TypeScript.
 *   Start at [Initial URL].
 *   Perform the following steps: [List steps taken].
@@ -78,21 +87,6 @@ Once you have explored a flow, you can generate a Playwright TypeScript test.
     *   Password: #pass
     *   Login Button: #login
 *   Add assertions for [Expected Result]."
-
-**Example Generated Code:**
-```typescript
-import { test, expect } from '@playwright/test';
-
-test('login flow', async ({ page }) => {
-  await page.goto('https://example.com/login');
-  await page.fill('#user', 'admin');
-  await page.fill('#pass', 'secret');
-  await page.click('#login');
-  await expect(page).toHaveURL(/dashboard/);
-});
-```
-
-Save this to `tests/generated.spec.ts` and run with `npx playwright test tests/generated.spec.ts`.
 
 ## Manual Test Script Generation
 
@@ -116,3 +110,4 @@ You can also generate manual test cases.
 *   `npm run buddy -- scout explore <url> --do <action> --json --session <file>`
 *   `npm run buddy -- scout crawl <url> --json` (Map site structure)
 *   `npm run buddy -- scout forms <url> --json` (Analyze forms specifically)
+*   `npm run buddy -- codegen --session <file> --out <file>` (Generate test code)
