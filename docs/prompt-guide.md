@@ -15,6 +15,7 @@ The tool runs in **headless mode** by default when using the `scout explore` com
 ## Setup
 
 Ensure you are in the project root. The tool is executed via `npm run buddy`.
+For detailed command usage and options, see the **[Usage Guide](./usage-guide.md)**.
 
 ## Workflow
 
