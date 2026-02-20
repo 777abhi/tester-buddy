@@ -10,7 +10,7 @@ This guide explains how to use `tester-buddy` (invoked via `npm run buddy`) as a
 3.  **Maintain State** across invocations using session files.
 4.  **Extract Information** for writing Playwright tests or manual test cases.
 
-The tool runs in **headless mode** by default when using the `explore` command, making it suitable for terminal-only environments.
+The tool runs in **headless mode** by default when using the `scout explore` command, making it suitable for terminal-only environments.
 
 ## Setup
 
@@ -25,7 +25,7 @@ The standard autonomous loop is: **Explore -> Analyze -> Action -> Verify**.
 Start by exploring the target URL. **Always** use `--session` to save cookies/localStorage, so you don't lose your place. **Always** use `--json` for machine-readable output.
 
 ```bash
-npm run buddy -- explore <url> --session session.json --json
+npm run buddy -- scout explore <url> --session session.json --json
 ```
 
 **Output Analysis:**
@@ -42,7 +42,7 @@ Parse the JSON. Look for elements relevant to your goal (e.g., a login form, a "
 
 ### 3. Perform Action
 
-Run `explore` again on the **current URL** (from the previous step's JSON) with the `--do` flag.
+Run `scout explore` again on the **current URL** (from the previous step's JSON) with the `--do` flag.
 
 **Syntax:** `--do "action:params"`
 
@@ -55,7 +55,7 @@ Run `explore` again on the **current URL** (from the previous step's JSON) with 
 
 **Example (Login):**
 ```bash
-npm run buddy -- explore <current_url> --session session.json --do "fill:#user:admin" --do "fill:#pass:secret" --do "click:#login" --json
+npm run buddy -- scout explore <current_url> --session session.json --do "fill:#user:admin" --do "fill:#pass:secret" --do "click:#login" --json
 ```
 
 ### 4. Verify
@@ -112,7 +112,7 @@ You can also generate manual test cases.
 
 ## Command Reference
 
-*   `npm run buddy -- explore <url> --json --session <file>`
-*   `npm run buddy -- explore <url> --do <action> --json --session <file>`
-*   `npm run buddy -- crawl <url> --json` (Map site structure)
-*   `npm run buddy -- forms <url> --json` (Analyze forms specifically)
+*   `npm run buddy -- scout explore <url> --json --session <file>`
+*   `npm run buddy -- scout explore <url> --do <action> --json --session <file>`
+*   `npm run buddy -- scout crawl <url> --json` (Map site structure)
+*   `npm run buddy -- scout forms <url> --json` (Analyze forms specifically)

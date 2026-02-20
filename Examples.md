@@ -13,7 +13,7 @@ Stop typing "standard_user" a hundred times a day.
 Open the browser, log in manually, and save the session.
 
 ```bash
-npm run buddy -- --open --url https://www.saucedemo.com/
+npm run buddy -- sidekick --url https://www.saucedemo.com/
 # ... Manually log in as 'standard_user' in the browser ...
 # In the terminal:
 dump standard-role
@@ -23,7 +23,7 @@ dump standard-role
 Next time, start directly on the inventory page, fully authenticated.
 
 ```bash
-npm run buddy -- --open --role standard-role --url https://www.saucedemo.com/inventory.html
+npm run buddy -- sidekick --role standard-role --url https://www.saucedemo.com/inventory.html
 ```
 
 ### Scenario B: Data Seeding & State Injection
@@ -31,14 +31,14 @@ Need to test the "Cart" page with 5 items but don't want to click "Add" 5 times?
 
 ```bash
 # Seed 5 items into the cart and open the browser
-npm run buddy -- --open --role standard-role --seed-items 5 --url https://www.saucedemo.com/cart.html
+npm run buddy -- sidekick --role standard-role --seed-items 5 --url https://www.saucedemo.com/cart.html
 ```
 > **Note:** Requires backend support for the `--seed-items` flag.
 
 ### Scenario C: Quick Accessibility & Error Audit
 While exploring, you notice a weird UI glitch. Check for underlying issues instantly.
 
-1. **Launch:** `npm run buddy -- --open --url https://www.saucedemo.com/`
+1. **Launch:** `npm run buddy -- sidekick --url https://www.saucedemo.com/`
 2. **Navigate:** Go to the suspicious page.
 3. **Audit:** Type `audit` in the terminal.
 
@@ -59,14 +59,14 @@ You want to see how the checkout page handles a 500 server error when placing an
       }
     ]
     ```
-2.  **Launch**: `npm run buddy -- --open --url https://www.saucedemo.com/checkout-step-two.html`
+2.  **Launch**: `npm run buddy -- sidekick --url https://www.saucedemo.com/checkout-step-two.html`
 3.  **Test**: Click "Finish".
     *   **Result**: The browser will receive the 500 error, allowing you to verify if the UI displays a proper error message instead of crashing.
 
 ### Scenario E: Capturing a Bug with Zero Effort (Auto-Tracing)
 You found a tricky bug but the dev says "works on my machine."
 
-1.  **Reproduce**: Open a session: `npm run buddy -- --open`
+1.  **Reproduce**: Open a session: `npm run buddy -- sidekick`
 2.  **Interact**: Perform the steps that cause the bug.
 3.  **Exit**: Type `exit` in the terminal.
 4.  **Share**: A `trace.zip` file is automatically created. Send this to the developer.
@@ -84,7 +84,7 @@ You found a bug that only happens after a complex setup. Don't make the develope
 2.  **Share**: Send `bug-repro-123.json` to your developer.
 3.  **Reproduce**: They run:
     ```bash
-    npm run buddy -- --open --url https://www.saucedemo.com/inventory.html --session ./bug-repro-123.json
+    npm run buddy -- sidekick --url https://www.saucedemo.com/inventory.html --session ./bug-repro-123.json
     ```
     They launch effectively "as you," with your cookies and local storage state.
 
@@ -93,7 +93,7 @@ You want to verify if the "Checkout" form really requires a POSTAL CODE without 
 
 1.  **Run**:
     ```bash
-    npm run buddy -- forms https://www.saucedemo.com/checkout-step-one.html --session ./standard-session.json
+    npm run buddy -- scout forms https://www.saucedemo.com/checkout-step-one.html --session ./standard-session.json
     ```
 2.  **Verify Output**:
     ```
@@ -109,13 +109,13 @@ You want to verify if the "Checkout" form really requires a POSTAL CODE without 
 
 ## 🤖 Part 2: The Autonomous Agent's Interface
 
-Agents use Tester Buddy to verify flows, scrape structured data, and detect bugs without vision.
+Agents use Tester Buddy to verify flows, scrape structured data, and detect bugs without vision via `scout`.
 
 ### Scenario A: Mapping the UI (Exploration)
 Agent wants to know what's on the login page to decide what to do next.
 
 ```bash
-npm run buddy -- explore https://www.saucedemo.com/ --json
+npm run buddy -- scout explore https://www.saucedemo.com/ --json
 ```
 **Agent Interpretation:** *"I see a user input (#user-name), a password input (#password), and a login button (#login-button). I should fill these to proceed."*
 
@@ -123,7 +123,7 @@ npm run buddy -- explore https://www.saucedemo.com/ --json
 Agent executes a multi-step flow to verify the "Add to Cart" feature works.
 
 ```bash
-npm run buddy -- explore https://www.saucedemo.com/ \
+npm run buddy -- scout explore https://www.saucedemo.com/ \
   --do "fill:#user-name:standard_user" \
   --do "fill:#password:secret_sauce" \
   --do "click:#login-button" \
@@ -138,7 +138,7 @@ npm run buddy -- explore https://www.saucedemo.com/ \
 Agent tests if a locked-out user is correctly blocked.
 
 ```bash
-npm run buddy -- explore https://www.saucedemo.com/ \
+npm run buddy -- scout explore https://www.saucedemo.com/ \
   --do "fill:#user-name:locked_out_user" \
   --do "fill:#password:secret_sauce" \
   --do "click:#login-button" \
@@ -150,7 +150,7 @@ npm run buddy -- explore https://www.saucedemo.com/ \
 Agent encounters a checkout form and needs to know required fields.
 
 ```bash
-npm run buddy -- forms https://www.saucedemo.com/checkout-step-one.html --session ./standard-session.json --json
+npm run buddy -- scout forms https://www.saucedemo.com/checkout-step-one.html --session ./standard-session.json --json
 ```
 
 **Output:**
@@ -180,7 +180,7 @@ See how Tester Buddy handles diverse web elements and app styles.
 **URL:** [https://www.wikipedia.org/](https://www.wikipedia.org/)
 
 ```bash
-npm run buddy -- explore https://www.wikipedia.org/ \
+npm run buddy -- scout explore https://www.wikipedia.org/ \
   --do "fill:#searchInput:Software testing" \
   --do "click:.pure-button-primary-progressive" \
   --expect "text:Software testing"
@@ -213,5 +213,5 @@ Define reusable testing roles and network mocks.
 
 **Usage:**
 ```bash
-npm run buddy -- --open --url https://www.saucedemo.com/ --mock-images
+npm run buddy -- sidekick --url https://www.saucedemo.com/ --mock-images
 ```
