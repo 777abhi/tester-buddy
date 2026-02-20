@@ -36,7 +36,7 @@ As a manual tester, you often need to jump into specific states (like "Admin wit
 Launch an interactive browser session:
 
 ```bash
-npm run buddy -- --open --url https://www.saucedemo.com/
+npm run buddy -- sidekick --url https://www.saucedemo.com/
 ```
 
 This opens a Chromium browser. You can interact with it normally.
@@ -53,7 +53,7 @@ Stop manually logging in every time you restart testing.
     This saves specific cookies and localStorage to `buddy.config.json`.
 3.  **Replay**: Next time, launch directly as that user:
     ```bash
-    npm run buddy -- --open --role admin-role --url https://www.saucedemo.com/inventory.html
+    npm run buddy -- sidekick --role admin-role --url https://www.saucedemo.com/inventory.html
     ```
     You will start logged in, bypassing the login screen.
 
@@ -63,7 +63,7 @@ Need a specific data state? Seed it instantly (requires backend configuration).
 This command sends a request to the endpoint configured in `buddy.config.json` under `seeding`.
 
 ```bash
-npm run buddy -- --open --seed-items 50
+npm run buddy -- sidekick --seed-items 50
 ```
 
 #### 3. On-Demand Audits
@@ -78,15 +78,15 @@ Every session is automatically recorded. When you type `exit`, a pure Playwright
 
 ## 🤖 Section 2: For Chat LLM Agents (Terminal Only)
 
-As an AI agent, you don't have eyes or a mouse. Tester Buddy gives you a "textual viewport" and "action capability" to autonomously explore and test web applications.
+As an AI agent, you don't have eyes or a mouse. Tester Buddy gives you a "textual viewport" and "action capability" to autonomously explore and test web applications via the `scout` command.
 
 ### 🔍 How to "See" a Page
 
-Use the `explore` command to get a structured, LLM-friendly representation of the page.
+Use the `scout explore` command to get a structured, LLM-friendly representation of the page.
 
 ```bash
 # Get a JSON dump of all interactive elements
-npm run buddy -- explore https://www.saucedemo.com/ --json
+npm run buddy -- scout explore https://www.saucedemo.com/ --json
 ```
 
 **What you get:**
@@ -102,7 +102,7 @@ You can chain actions to simulate a user flow and verify the result in a single 
 
 **Example: Login Flow Verification**
 ```bash
-npm run buddy -- explore https://www.saucedemo.com/ \
+npm run buddy -- scout explore https://www.saucedemo.com/ \
   --do "fill:#user-name:standard_user" \
   --do "fill:#password:secret_sauce" \
   --do "click:#login-button" \
@@ -123,11 +123,10 @@ npm run buddy -- explore https://www.saucedemo.com/ \
 
 ### 📝 Handling Forms
 
-Use the `forms` command to specifically analyze input fields, understanding what data is required.
+Use the `scout forms` command to specifically analyze input fields, understanding what data is required.
 
 ```bash
-```bash
-npm run buddy -- forms https://www.saucedemo.com/ --json
+npm run buddy -- scout forms https://www.saucedemo.com/ --json
 ```
 
 **Returns:**
@@ -136,10 +135,10 @@ npm run buddy -- forms https://www.saucedemo.com/ --json
 
 ### 🗺️ Site Mapping
 
-Use the `crawl` command to map out a website's structure and find broken links.
+Use the `scout crawl` command to map out a website's structure and find broken links.
 
 ```bash
-npm run buddy -- crawl https://www.saucedemo.com/ --depth 2
+npm run buddy -- scout crawl https://www.saucedemo.com/ --depth 2
 ```
 
 **Options:**
@@ -151,7 +150,7 @@ npm run buddy -- crawl https://www.saucedemo.com/ --depth 2
 Capture key performance metrics (Load Time, First Paint, Resources) for the page.
 
 ```bash
-npm run buddy -- explore https://www.saucedemo.com/ --performance
+npm run buddy -- scout explore https://www.saucedemo.com/ --performance
 ```
 
 ### 🧠 Persistent Memory for Agents
@@ -160,7 +159,7 @@ Agents can maintain "state" across different command executions using the `--ses
 
 1.  **Login and Save State:**
     ```bash
-    npm run buddy -- explore https://www.saucedemo.com/ \
+    npm run buddy -- scout explore https://www.saucedemo.com/ \
       --do "fill:#user-name:standard_user" \
       --do "fill:#password:secret_sauce" \
       --do "click:#login-button" \
@@ -169,8 +168,7 @@ Agents can maintain "state" across different command executions using the `--ses
 
 2.  **Reuse State (Start Logged In):**
     ```bash
-    ```bash
-    npm run buddy -- explore https://www.saucedemo.com/inventory.html \
+    npm run buddy -- scout explore https://www.saucedemo.com/inventory.html \
       --session ./standard-session.json
     ```
 
@@ -208,19 +206,19 @@ You can pre-define mocked network responses and user roles in `buddy.config.json
 We are actively working on making Tester Buddy even more powerful. Here is what is coming next:
 
 ### 🚀 Proposed Agentic Capabilities
-- [x] **Site Crawling & Mapping (`crawl`)**:
+- [x] **Site Crawling & Mapping (`scout crawl`)**:
     - **Goal**: Allow agents to autonomous map out an application without manually navigating every link.
-    - **Usage**: `npm run buddy -- crawl https://www.saucedemo.com/ --depth 2`
+    - **Usage**: `npm run buddy -- scout crawl https://www.saucedemo.com/ --depth 2`
     - **Benefits**: Automatically discovers all reachable pages, reports broken links (404s), and generates a "sitemap" JSON.
 
 - [x] **Network & Console Monitoring**:
     - **Goal**: Catch invisible functionality bugs (API failures, JS errors) during exploration.
-    - **Usage**: `npm run buddy -- explore <url> --monitor-errors`
+    - **Usage**: `npm run buddy -- scout explore <url> --monitor-errors`
     - **Benefits**: Fails if network requests error (4xx/5xx) or console errors occur, detecting issues visible UI might miss.
 
 - [x] **Visual Sitemap Generator**:
     - **Goal**: Generate a visual graph (e.g., DOT/Mermaid) of the crawled site structure.
-    -   **Usage**: `npm run buddy -- crawl <url> --visual`
+    -   **Usage**: `npm run buddy -- scout crawl <url> --visual`
     -   **Benefits**: Visualize site architecture and link flow.
 
 - [ ] **Test Code Generation (`codegen`)**:
@@ -230,7 +228,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
 
 - [ ] **Visual Change Detection**:
     - **Goal**: Help agents "see" unplanned visual changes.
-    - **Usage**: `npm run buddy -- explore <url> --diff baseline.png`
+    - **Usage**: `npm run buddy -- scout explore <url> --diff baseline.png`
     - **Benefits**: Returns similarity score/description of visual changes, identifying CSS regressions.
 
 - [ ] **Smart Form Fuzzing**:
