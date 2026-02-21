@@ -197,6 +197,49 @@ scout
   });
 
 scout
+  .command('fuzz <url>')
+  .description('Fuzz forms on a page with common attack vectors')
+  .option('--json', 'Output in JSON format')
+  .option('--timeout <number>', 'Timeout per payload in ms (default: 2000)', parseInt, 2000)
+  .action(async (url, options) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      const results = await buddy.fuzz(url, { timeout: options.timeout });
+
+      if (options.json) {
+        console.log(JSON.stringify(results, null, 2));
+      } else {
+        if (results.length === 0) {
+          console.log("No forms found or fuzzing yielded no results.");
+        } else {
+          console.log(`\n### Fuzzing Results for ${url}\n`);
+          console.log("| Form ID | Payload Type | Status | Error | Time (ms) |");
+          console.log("|---|---|---|---|---|");
+          results.forEach(res => {
+            const statusIcon = res.status === 'success' ? '✅' : (res.status === 'crash' ? '🔥' : '⚠️');
+            let error = res.error || '';
+            if (error.length > 30) error = error.substring(0, 27) + "...";
+            console.log(`| ${res.formId} | ${res.payloadType} | ${statusIcon} ${res.status} | ${error} | ${res.executionTime} |`);
+          });
+
+          const failures = results.filter(r => r.status !== 'success');
+          if (failures.length > 0) {
+            console.log(`\n🚨 Detected ${failures.length} potential vulnerabilities or crashes!`);
+          } else {
+             console.log("\n✅ No immediate crashes detected.");
+          }
+        }
+      }
+      await buddy.close();
+    } catch (e) {
+      console.error('Error:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
+
+scout
   .command('forms <url>')
   .description('Analyze forms on a page')
   .option('--json', 'Output in JSON format')

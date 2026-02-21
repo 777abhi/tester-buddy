@@ -12,6 +12,8 @@ import {
   Seeder,
   PerformanceMonitor,
   SessionManager,
+  Fuzzer,
+  FuzzResult,
   ActionRecord,
   ExploreResult,
   CrawlResult,
@@ -21,6 +23,7 @@ import {
 export type { ExploreResult, InteractiveElement } from './features/explorer';
 export type { CrawlResult } from './features/crawler';
 export type { FormResult, FormInput } from './features/forms';
+export type { FuzzResult } from './features/fuzzer';
 
 export class Buddy {
   private browserManager: BrowserManager;
@@ -34,6 +37,7 @@ export class Buddy {
   private seeder: Seeder;
   private performanceMonitor: PerformanceMonitor;
   private sessionManager: SessionManager;
+  private fuzzer: Fuzzer;
 
   constructor(private config: BuddyConfig = {}) {
     this.browserManager = new BrowserManager();
@@ -47,6 +51,7 @@ export class Buddy {
     this.seeder = new Seeder(config);
     this.performanceMonitor = new PerformanceMonitor();
     this.sessionManager = new SessionManager();
+    this.fuzzer = new Fuzzer();
   }
 
   async launchInteractive(startUrl?: string) {
@@ -261,5 +266,13 @@ export class Buddy {
     if (!page) throw new Error("Page not initialized");
     
     return await this.crawler.crawl(page, startUrl, maxDepth);
+  }
+
+  async fuzz(url: string, options: { timeout?: number } = {}): Promise<FuzzResult[]> {
+    const page = await this.browserManager.ensurePage(true);
+    console.log(`Navigating to ${redactUrl(url)}...`);
+    await page.goto(url);
+
+    return await this.fuzzer.fuzz(page, options);
   }
 }

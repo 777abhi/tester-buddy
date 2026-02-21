@@ -32,3 +32,8 @@ Constraint: Initial implementation uses Navigation Timing Level 2 but falls back
 Decision: Implemented `SessionManager` to handle custom session format (state + history) and `CodeGenerator` to transform history into Playwright test scripts.
 Reasoning: Enables agents and manual testers to convert exploration sessions into permanent test artifacts, bridging the gap between exploration and regression testing.
 Constraint: `scout explore` now records every `goto` and `--do` action when `--session` is used. The `CodeGenerator` handles basic deduplication of consecutive navigations.
+
+## 2025-02-21 - Smart Form Fuzzing
+Decision: Implemented `Fuzzer` class that uses `FormAnalyzer` to identify inputs and injects common attack vectors (SQLi, XSS, Buffer Overflow) to crash-test forms.
+Reasoning: Provides automated security/stability testing for agents. Implemented as a separate feature `scout fuzz` to avoid cluttering `explore`.
+Constraint: Relies on page reload or navigation handling to reset state between payloads. Current implementation assumes simple forms and re-finds them by index or ID.

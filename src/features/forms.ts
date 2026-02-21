@@ -13,6 +13,7 @@ export interface FormInput {
 export interface FormResult {
   type: 'form' | 'standalone';
   id: string;
+  index?: number;
   name: string;
   inputs: FormInput[];
 }
@@ -67,6 +68,7 @@ export class FormAnalyzer {
           results.push({
             type: 'form',
             id: form.id || `form-${index}`,
+            index: index,
             name: form.getAttribute('name') || '',
             inputs: visibleInputs.map(el => extractInputData(el))
           });

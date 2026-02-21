@@ -155,6 +155,20 @@ Capture key performance metrics (Load Time, First Paint, Resources) for the page
 npm run buddy -- scout explore https://www.saucedemo.com/ --performance
 ```
 
+### 🔥 Smart Form Fuzzing
+
+Automated stress testing of input fields to find crashes and errors.
+
+```bash
+npm run buddy -- scout fuzz https://www.saucedemo.com/
+```
+
+**What it does:**
+- Identifies forms on the page.
+- Injects common attack vectors (SQLi, XSS, Buffer Overflow, etc.).
+- Submits forms and monitors for crashes (500 errors) or console errors.
+- Reports a summary of vulnerabilities.
+
 ### ✍️ Test Generation
 
 Convert your exploration session into a permanent Playwright test script.
@@ -249,9 +263,9 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Usage**: `npm run buddy -- scout explore <url> --diff baseline.png`
     - **Benefits**: Returns similarity score/description of visual changes, identifying CSS regressions.
 
-- [ ] **Smart Form Fuzzing**:
+- [x] **Smart Form Fuzzing**:
     - **Goal**: Automated stress testing of input fields.
-    - **Usage**: `npm run buddy -- fuzz <url>`
+    - **Usage**: `npm run buddy -- scout fuzz <url>`
     - **Benefits**: Injects boundary values to crash test forms and report stack traces.
 
 - [ ] **Interactive REPL Mode**:
