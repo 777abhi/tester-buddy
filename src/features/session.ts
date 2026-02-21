@@ -1,5 +1,5 @@
 import { BrowserContext, Cookie } from 'playwright';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 
 export interface ActionRecord {
   action: string;
@@ -15,12 +15,8 @@ export interface SessionData {
 
 export class SessionManager {
   async loadSession(path: string): Promise<SessionData> {
-    if (!existsSync(path)) {
-      return { cookies: [], origins: [], history: [] };
-    }
-
     try {
-      const content = readFileSync(path, 'utf-8');
+      const content = await readFile(path, 'utf-8');
       const data = JSON.parse(content);
 
       // Handle legacy format (Playwright storage state)
@@ -29,7 +25,10 @@ export class SessionManager {
       const history = data.history || [];
 
       return { cookies, origins, history };
-    } catch (e) {
+    } catch (e: any) {
+      if (e.code === 'ENOENT') {
+        return { cookies: [], origins: [], history: [] };
+      }
       console.warn(`Failed to load session from ${path}:`, e);
       return { cookies: [], origins: [], history: [] };
     }
@@ -44,7 +43,7 @@ export class SessionManager {
         history
       };
 
-      writeFileSync(path, JSON.stringify(sessionData, null, 2));
+      await writeFile(path, JSON.stringify(sessionData, null, 2));
     } catch (e) {
       console.error(`Failed to save session to ${path}:`, e);
     }
