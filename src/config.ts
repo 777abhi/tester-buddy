@@ -31,10 +31,16 @@ export interface SeedConfig {
   headers?: Record<string, string>;
 }
 
+export interface ExplorerConfig {
+  interactiveSelectors?: string[];
+  alertSelectors?: string[];
+}
+
 export interface BuddyConfig {
   roles?: Record<string, RoleConfig>;
   mocks?: MockConfig[];
   seeding?: SeedConfig;
+  explorer?: ExplorerConfig;
 }
 
 export class ConfigLoader {

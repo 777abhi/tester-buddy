@@ -1,5 +1,7 @@
 import { Page } from 'playwright';
 import { PerformanceMetrics } from './performance';
+import { INTERACTIVE_SELECTORS, ALERT_SELECTORS } from './constants';
+import { ExplorerConfig } from '../config';
 
 export interface InteractiveElement {
   tag: string;
@@ -25,14 +27,14 @@ export interface ExploreResult {
 }
 
 export class Explorer {
+  constructor(private config: ExplorerConfig = {}) {}
+
   async scrape(page: Page): Promise<ExploreResult> {
-    return await page.evaluate(() => {
-      const selectors = [
-        "button", "a", "input", "select", "textarea",
-        "[role='button']", "[role='link']",
-        "[role='alert']", "[aria-invalid='true']",
-        ".error-message", ".error", ".toast", ".alert"
-      ].join(", ");
+    const interactive = this.config.interactiveSelectors || INTERACTIVE_SELECTORS;
+    const alerts = this.config.alertSelectors || ALERT_SELECTORS;
+
+    return await page.evaluate(({ interactive, alerts }) => {
+      const selectors = [...interactive, ...alerts].join(", ");
 
       const elements = Array.from(document.querySelectorAll(selectors));
       const visible = elements.filter(el => {
@@ -56,12 +58,7 @@ export class Explorer {
             }
           }
 
-          const isAlert = el.getAttribute('role') === 'alert' ||
-            el.getAttribute('aria-invalid') === 'true' ||
-            el.classList.contains('error-message') ||
-            el.classList.contains('error') ||
-            el.classList.contains('toast') ||
-            el.classList.contains('alert');
+          const isAlert = alerts.some(selector => el.matches(selector));
 
           return {
             tag: el.tagName.toLowerCase(),
@@ -80,6 +77,6 @@ export class Explorer {
           };
         })
       };
-    });
+    }, { interactive, alerts });
   }
 }
