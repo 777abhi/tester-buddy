@@ -12,3 +12,4 @@ export * from './visualizer';
 export * from './performance';
 export * from './session';
 export * from './codegen';
+export * from './fuzzer';
