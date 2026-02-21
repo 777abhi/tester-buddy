@@ -1,114 +1,185 @@
 # Agent Prompt Guide for Tester Buddy
 
-This guide explains how to use `tester-buddy` (invoked via `npm run buddy`) as an autonomous agent tool for exploring websites and generating test automation scripts.
+This guide is the **authoritative manual** for autonomous agents (e.g., GPT-4.1) using the `tester-buddy` CLI. It describes how to interact with websites, maintain state, and verify actions without human intervention.
 
-## Introduction
+## 🤖 Core Directives for Autonomous Agents
 
-`tester-buddy` is a CLI tool designed to be the "eyes and hands" of an LLM agent. It allows you to:
-1.  **Explore** a web page to discover interactive elements.
-2.  **Perform Actions** (click, fill, type, scroll) to navigate the application.
-3.  **Maintain State** across invocations using session files.
-4.  **Extract Information** for writing Playwright tests or manual test cases.
+1.  **Always Use JSON**: Append `--json` to every command. Text output is for humans; JSON is for you.
+2.  **Maintain State**: Always use `--session ./session.json` (or a unique path) to persist cookies and local storage across commands. Without this, every command starts a fresh, empty browser session.
+3.  **Monitor Errors**: Use `--monitor-errors` when critical actions (like form submission) occur to catch hidden 404s/500s or console exceptions.
+4.  **Verify Navigation**: Always check the `url` field in the JSON response to confirm if a navigation action (click/goto) succeeded.
+5.  **Sequential Execution**: You must execute commands one by one. The state file bridges the gap between executions.
 
-The tool runs in **headless mode** by default when using the `scout explore` command, making it suitable for terminal-only environments.
+---
 
-## Setup
+## 🛠 Command Reference
 
-Ensure you are in the project root. The tool is executed via `npm run buddy`.
-For detailed command usage and options, see the **[Usage Guide](./usage-guide.md)**.
+The entry point is `npm run buddy -- <command> [options]`.
 
-## Workflow
+### 1. `scout explore`: The Eyes and Hands
+Your primary tool to see the page and interact with it.
 
-The standard autonomous loop is: **Explore -> Analyze -> Action -> Verify**.
-
-### 1. Explore (Start Session)
-
-Start by exploring the target URL. **Always** use `--session` to save cookies/localStorage, so you don't lose your place. **Always** use `--json` for machine-readable output.
-
+**Syntax:**
 ```bash
-npm run buddy -- scout explore <url> --session session.json --json
+npm run buddy -- scout explore <url> --json --session <path> [options]
 ```
 
-**Output Analysis:**
-The JSON output contains:
-*   `url`: The current URL (important to track navigation).
-*   `title`: Page title.
-*   `elements`: List of interactive elements (buttons, inputs, links).
+**Options:**
+*   `--do "action:params"`: Perform an action. Can be repeated for a sequence.
+    *   `click:<selector>`: Click an element (e.g., `click:#submit`).
+    *   `fill:<selector>:<value>`: Fill an input (e.g., `fill:#user:admin`).
+    *   `press:<key>`: Press a key (e.g., `press:Enter`, `press:Tab`).
+    *   `scroll:<target>`: Scroll page (e.g., `scroll:bottom`, `scroll:#footer`).
+    *   `wait:<ms>`: Wait for X milliseconds (e.g., `wait:2000`).
+    *   `goto:<url>`: Navigate to a URL.
+*   `--expect "type:value"`: Verify state.
+    *   `text:<string>`: Page contains text.
+    *   `selector:<selector>`: Element exists.
+    *   `url:<string>`: URL contains string.
+*   `--monitor-errors`: Fail if network/console errors occur.
+*   `--performance`: Include performance metrics in JSON.
+*   `--screenshot`: Save `screenshot.png` (useful if you have vision capabilities).
 
-### 2. Analyze & Decide
-
-Parse the JSON. Look for elements relevant to your goal (e.g., a login form, a "Next" button).
-*   Identify the `selector` (id, class, or construct one).
-*   Decide on an action (`click`, `fill`, `press`).
-
-### 3. Perform Action
-
-Run `scout explore` again on the **current URL** (from the previous step's JSON) with the `--do` flag.
-
-**Syntax:** `--do "action:params"`
-
-*   **Click:** `--do "click:#submit-btn"`
-*   **Fill:** `--do "fill:#username:admin"` (Format: `selector:value`)
-*   **Press (Keyboard):** `--do "press:Enter"`, `--do "press:Tab"`
-*   **Scroll:** `--do "scroll:bottom"`, `--do "scroll:top"`, `--do "scroll:#footer"`
-*   **Wait:** `--do "wait:2000"` (milliseconds)
-*   **Goto:** `--do "goto:https://example.com/new"`
-
-**Example (Login):**
-```bash
-npm run buddy -- scout explore <current_url> --session session.json --do "fill:#user:admin" --do "fill:#pass:secret" --do "click:#login" --json
+**JSON Output Schema:**
+```json
+{
+  "url": "https://example.com/dashboard",
+  "title": "Dashboard",
+  "elements": [
+    {
+      "tag": "button",
+      "text": "Submit",
+      "id": "submit-btn",
+      "className": "btn primary",
+      "ariaLabel": "",
+      "region": "form#login",
+      "isAlert": false
+    }
+  ],
+  "performance": { ... } // if --performance used
+}
 ```
 
-### 4. Verify
+### 2. `scout crawl`: The Map
+Discover the structure of a website to find all reachable pages.
 
-Check the JSON output of the action command.
-*   Did `url` change? (Navigation successful)
-*   Are there error messages in `elements`?
-*   Is the new content visible?
+**Syntax:**
+```bash
+npm run buddy -- scout crawl <url> --json --depth 2
+```
 
-## Writing Playwright Tests
+**JSON Output Schema:**
+Array of objects:
+```json
+[
+  {
+    "url": "https://example.com/about",
+    "status": 200,
+    "links": ["https://example.com/team", ...],
+    "error": null
+  }
+]
+```
 
-You can automatically generate a Playwright test script from your exploration session.
+### 3. `scout forms`: The Analyst
+Deep dive into forms to understand required fields and input types.
 
-1.  **Ensure you used `--session <file>`** during your exploration.
-2.  **Run Codegen:**
+**Syntax:**
+```bash
+npm run buddy -- scout forms <url> --json --session <path>
+```
+
+**JSON Output Schema:**
+Array of form groups:
+```json
+[
+  {
+    "id": "login-form",
+    "inputs": [
+      { "type": "text", "name": "user", "required": true, "value": "" }
+    ]
+  }
+]
+```
+
+### 4. `codegen`: The Scribe
+Convert your session history into a permanent Playwright test file.
+
+**Syntax:**
+```bash
+npm run buddy -- codegen --session <path> --out <path>
+```
+
+---
+
+## 🔄 Standard Workflows
+
+### Workflow 1: Autonomous Exploration & Verification
+
+**Goal**: Navigate to a page, perform an action, and verify the result.
+
+1.  **Inspect**: Start by exploring the initial URL.
     ```bash
-    npm run buddy -- codegen --session session.json --out tests/generated.spec.ts
+    npm run buddy -- scout explore https://example.com --json --session ./session.json
     ```
-3.  **Refine:**
-    Read the generated file and refine assertions if necessary.
+2.  **Analyze**: Parse the `elements` list in the JSON. Find the element you want (e.g., a button with text "Login").
+    *   *Self-Correction*: If multiple elements look similar, prioritize those with `id` or unique `aria-label`.
+3.  **Act**: Execute the action using the selector found.
+    ```bash
+    npm run buddy -- scout explore https://example.com \
+      --do "fill:#username:admin" \
+      --do "fill:#password:secret" \
+      --do "click:#login-btn" \
+      --json --session ./session.json --monitor-errors
+    ```
+    *Note: We reuse the URL from the previous step, but if the `click` causes navigation, the `scout explore` command will handle it. However, it's best practice to use the *current* URL returned in the previous JSON.*
+4.  **Verify**: Check the new JSON output.
+    *   Did `url` change? (Successful navigation)
+    *   Are there error alerts (check `isAlert: true` in elements)?
+    *   Did the expected element appear?
 
-**Legacy Method (Manual Prompting):**
+### Workflow 2: Test Generation
 
-"Based on the exploration of [URL], write a Playwright test in TypeScript.
-*   Start at [Initial URL].
-*   Perform the following steps: [List steps taken].
-*   Use the following selectors I discovered:
-    *   Username: #user
-    *   Password: #pass
-    *   Login Button: #login
-*   Add assertions for [Expected Result]."
+**Goal**: Create a regression test from an exploration session.
 
-## Manual Test Script Generation
+1.  **Record**: Perform your exploration steps (Workflow 1), ensuring `--session ./session.json` is passed to *every* command.
+2.  **Generate**:
+    ```bash
+    npm run buddy -- codegen --session ./session.json --out tests/generated_test.spec.ts
+    ```
+3.  **Refine**: (Optional) Read the generated file and improve assertions if needed.
 
-You can also generate manual test cases.
+### Workflow 3: Site Mapping
 
-**Prompt Template:**
-"Create a manual test case for the Login functionality based on the exploration. Include Preconditions, Steps, and Expected Results."
+**Goal**: Understand the layout of a documentation site or blog.
 
-## Tips for Agents
+1.  **Crawl**:
+    ```bash
+    npm run buddy -- scout crawl https://example.com/docs --depth 2 --json
+    ```
+2.  **Analyze**: Look for 404s in the output to report broken links. Use the list of URLs to plan further `scout explore` tasks.
 
-*   **State Persistence:** Always pass `--session session.json` to every command in a sequence.
-*   **Current URL:** Always check the `url` field in the JSON response. If the page navigated, use the *new* URL in the next command.
-*   **Truncated Output:** If you are *not* using JSON (text mode), output is summarized for >50 elements. Use `--show-all` to see everything, or prefer `--json`.
-*   **Screenshots:** Use `--screenshot` to save a `screenshot.png` if you need visual confirmation (and have tools to view it).
-*   **Errors:** If the command fails, check stderr.
-*   **Selectors:** Prefer ID (`#id`) or unique attributes. If unavailable, use text selectors or stable classes.
+---
 
-## Command Reference
+## 🧠 Mental Model for Agents
 
-*   `npm run buddy -- scout explore <url> --json --session <file>`
-*   `npm run buddy -- scout explore <url> --do <action> --json --session <file>`
-*   `npm run buddy -- scout crawl <url> --json` (Map site structure)
-*   `npm run buddy -- scout forms <url> --json` (Analyze forms specifically)
-*   `npm run buddy -- codegen --session <file> --out <file>` (Generate test code)
+*   **State is a File**: You have no persistent browser process. The `session.json` file is your memory. If you delete it or forget to include it, you have amnesia.
+*   **Selectors**:
+    *   Best: ID (`#submit`)
+    *   Good: Attribute (`[data-testid="submit"]`)
+    *   Okay: Class (`.btn-primary`) - risky if multiple exist.
+    *   Avoid: Complex XPath or brittle paths.
+*   **Wait Strategy**: The tool has built-in waiting, but for heavy SPAs, adding a `--do "wait:1000"` after a click can prevent reading the DOM before it updates.
+*   **Error Recovery**:
+    *   If a selector fails, check the `elements` list again. Did the ID change?
+    *   If network errors occur (found via `--monitor-errors`), report them.
+    *   If the page is empty, try increasing `wait` or checking if it requires a login you missed.
+
+## ⚠️ Troubleshooting
+
+*   **"Selector not found"**: The page might have changed or loaded slowly.
+    *   *Fix*: Run `scout explore` again without actions to see the current state.
+*   **"Session not found"**: You forgot to create it or passed the wrong path.
+    *   *Fix*: The first `scout explore` creates the file if it doesn't exist.
+*   **Navigation loop**: You keep seeing the same page after clicking.
+    *   *Fix*: The click might not have triggered. Try `click` again, or check if the button is actually a link and use `goto` with the `href`.
