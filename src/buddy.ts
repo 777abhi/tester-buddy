@@ -37,7 +37,7 @@ export class Buddy {
   constructor(private config: BuddyConfig = {}) {
     this.browserManager = new BrowserManager();
     this.actionExecutor = new ActionExecutor();
-    this.explorer = new Explorer();
+    this.explorer = new Explorer(config.explorer);
     this.crawler = new Crawler();
     this.formAnalyzer = new FormAnalyzer();
     this.networkManager = new NetworkManager(config);
