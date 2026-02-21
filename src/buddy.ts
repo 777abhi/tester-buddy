@@ -1,5 +1,6 @@
 import { BrowserManager } from './core/browser';
 import { BuddyConfig } from './config';
+import { redactUrl } from './utils/url';
 import {
   ActionExecutor,
   Explorer,
@@ -104,7 +105,7 @@ export class Buddy {
   async navigate(url: string) {
     const page = this.browserManager.getPage();
     if (page) {
-      console.log(`Navigating to: ${url}`);
+      console.log(`Navigating to: ${redactUrl(url)}`);
       await page.goto(url);
     }
   }
@@ -149,7 +150,7 @@ export class Buddy {
         timestamp: Date.now()
       });
 
-      console.log(`Navigating to ${url}...`);
+      console.log(`Navigating to ${redactUrl(url)}...`);
       await page.goto(url);
 
       if (options.actions && options.actions.length > 0) {
@@ -232,7 +233,7 @@ export class Buddy {
 
       const page = await this.browserManager.ensurePage(true, storageState);
 
-      console.log(`Navigating to ${url}...`);
+      console.log(`Navigating to ${redactUrl(url)}...`);
       await page.goto(url);
 
       const forms = await this.formAnalyzer.analyze(page);

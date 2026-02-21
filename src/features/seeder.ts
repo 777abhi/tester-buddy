@@ -1,5 +1,6 @@
 import { request } from 'playwright';
 import { BuddyConfig } from '../config';
+import { redactUrl } from '../utils/url';
 
 export class Seeder {
   constructor(private config: BuddyConfig) {}
@@ -14,7 +15,7 @@ export class Seeder {
       return;
     }
 
-    console.log(`Seeding data to ${seedConfig.url}...`);
+    console.log(`Seeding data to ${redactUrl(seedConfig.url)}...`);
     const apiContext = await request.newContext();
 
     try {

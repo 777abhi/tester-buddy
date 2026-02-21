@@ -1,4 +1,5 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { redactUrl } from '../utils/url';
 
 export class BrowserManager {
   private browser: Browser | null = null;
@@ -52,7 +53,7 @@ export class BrowserManager {
     console.log('Browser launched. Ready for manual testing.');
 
     if (startUrl) {
-      console.log(`Navigating to: ${startUrl}`);
+      console.log(`Navigating to: ${redactUrl(startUrl)}`);
       await this.page.goto(startUrl);
     }
   }
@@ -72,7 +73,7 @@ export class BrowserManager {
     this.page.on('response', response => {
       const status = response.status();
       if (status >= 400) {
-        const errorMsg = `[${status}] ${response.request().method()} ${response.url()}`;
+        const errorMsg = `[${status}] ${response.request().method()} ${redactUrl(response.url())}`;
         this.networkErrors.push(errorMsg);
         if (this.networkErrors.length > BrowserManager.MAX_CONSOLE_ERRORS) {
           this.networkErrors.shift();
