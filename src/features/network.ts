@@ -1,5 +1,6 @@
 import { Page } from 'playwright';
 import { BuddyConfig } from '../config';
+import { redactUrl } from '../utils/url';
 
 export class NetworkManager {
   constructor(private config: BuddyConfig) {}
@@ -20,7 +21,7 @@ export class NetworkManager {
           return;
         }
 
-        console.log(`Mocking request: ${request.method()} ${request.url()}`);
+        console.log(`Mocking request: ${request.method()} ${redactUrl(request.url())}`);
 
         let body = mockConfig.response.body;
         if (typeof body !== 'string') {

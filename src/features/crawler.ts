@@ -1,4 +1,5 @@
 import { Page } from 'playwright';
+import { redactUrl } from '../utils/url';
 
 export interface CrawlResult {
   url: string;
@@ -9,7 +10,7 @@ export interface CrawlResult {
 
 export class Crawler {
   async crawl(page: Page, startUrl: string, maxDepth: number = 2): Promise<CrawlResult[]> {
-    console.log(`Starting crawl from ${startUrl} with depth ${maxDepth}...`);
+    console.log(`Starting crawl from ${redactUrl(startUrl)} with depth ${maxDepth}...`);
 
     const rootUrl = new URL(startUrl);
     const origin = rootUrl.origin;
@@ -35,7 +36,7 @@ export class Crawler {
     while (queue.length > 0) {
       const { url, depth } = queue.shift()!;
 
-      console.log(`Crawling: ${url} (Depth: ${depth})`);
+      console.log(`Crawling: ${redactUrl(url)} (Depth: ${depth})`);
 
       try {
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -83,7 +84,7 @@ export class Crawler {
         }
 
       } catch (e: any) {
-        console.error(`Failed to crawl ${url}:`, e.message);
+        console.error(`Failed to crawl ${redactUrl(url)}:`, e.message);
         results.push({
           url: url,
           status: 0,
