@@ -159,13 +159,14 @@ export class Buddy {
       await page.goto(url);
 
       if (options.actions && options.actions.length > 0) {
-        await this.actionExecutor.performActions(page, options.actions);
+        const results = await this.actionExecutor.performActions(page, options.actions);
         // Record actions
-        for (const act of options.actions) {
+        for (const res of results) {
           history.push({
-            action: act,
+            action: res.action,
             timestamp: Date.now(),
-            url: page.url()
+            url: page.url(),
+            semantic: res.result?.semanticLocator
           });
         }
       }

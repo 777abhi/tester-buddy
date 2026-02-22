@@ -37,3 +37,8 @@ Constraint: `scout explore` now records every `goto` and `--do` action when `--s
 Decision: Implemented `Fuzzer` class that uses `FormAnalyzer` to identify inputs and injects common attack vectors (SQLi, XSS, Buffer Overflow) to crash-test forms.
 Reasoning: Provides automated security/stability testing for agents. Implemented as a separate feature `scout fuzz` to avoid cluttering `explore`.
 Constraint: Relies on page reload or navigation handling to reset state between payloads. Current implementation assumes simple forms and re-finds them by index or ID.
+
+## 2025-02-23 - Semantic Test Generation
+Decision: Enhanced `ActionExecutor` to return `ActionResult` containing semantic locators (e.g., `getByRole`) derived at runtime via `page.evaluate`, and updated `CodeGenerator` to prioritize these over CSS selectors.
+Reasoning: CSS selectors are brittle and prone to breakage. Semantic locators (Role, Text, Label) are more robust and align with Playwright best practices, creating higher-quality tests for users.
+Constraint: The semantic detection logic runs inside `page.evaluate` and must handle various element types and attributes gracefully without crashing the browser context.
