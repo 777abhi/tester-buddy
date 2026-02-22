@@ -5,6 +5,7 @@ export interface ActionRecord {
   action: string;
   url?: string;
   timestamp: number;
+  semantic?: string;
 }
 
 export interface SessionData {

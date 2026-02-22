@@ -1,7 +1,13 @@
 import { Page } from 'playwright';
 
+export interface ActionResult {
+  success: boolean;
+  semanticLocator?: string;
+  error?: string;
+}
+
 export interface ActionStrategy {
-  execute(page: Page, params: string): Promise<void>;
+  execute(page: Page, params: string): Promise<ActionResult>;
   matches(actionType: string): boolean;
 }
 

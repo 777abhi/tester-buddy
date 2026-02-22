@@ -330,10 +330,14 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Usage**: `npm run buddy -- flake-check <url> --runs 10`
     - **Benefits**: Helps identify unreliable tests before they break CI pipelines.
 
-- [ ] **Semantic Test Generation**:
+- [x] **Semantic Test Generation**:
     - **Goal**: Generate tests using user-centric locators (`getByRole`, `getByText`) instead of CSS selectors for greater resilience.
-    - **Usage**: `npm run buddy -- codegen --semantic`
+    - **Usage**: Automatically applied when `scout explore` or `sidekick` captures semantic attributes.
     - **Benefits**: Tests are less brittle and more readable.
+
+- [ ] **Intelligent Wait Detection**:
+    - **Goal**: Automatically insert `expect` or `waitFor` steps in generated tests by analyzing network idle times or DOM mutations during recording.
+    - **Benefits**: Reduces flaky tests caused by timing issues without manual `wait` steps.
 
 ---
 

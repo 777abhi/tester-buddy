@@ -42,7 +42,11 @@ export class CodeGenerator {
           break;
 
         case 'click':
-          lines.push(`  await page.click('${params}');`);
+          if (record.semantic) {
+            lines.push(`  await page.${record.semantic}.click();`);
+          } else {
+            lines.push(`  await page.click('${params}');`);
+          }
           break;
 
         case 'fill':
@@ -56,7 +60,11 @@ export class CodeGenerator {
           if (fillParts.length >= 2) {
             const selector = fillParts[0];
             const value = fillParts.slice(1).join(':');
-            lines.push(`  await page.fill('${selector}', '${value}');`);
+            if (record.semantic) {
+              lines.push(`  await page.${record.semantic}.fill('${value}');`);
+            } else {
+              lines.push(`  await page.fill('${selector}', '${value}');`);
+            }
           } else {
              lines.push(`  // Warning: invalid fill params '${params}'`);
           }

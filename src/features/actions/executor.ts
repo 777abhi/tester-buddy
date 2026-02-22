@@ -1,5 +1,5 @@
 import { Page } from 'playwright';
-import { ActionStrategy, ExpectationStrategy } from './types';
+import { ActionStrategy, ExpectationStrategy, ActionResult } from './types';
 import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, TextExpectation, SelectorExpectation, UrlExpectation } from './strategies';
 
 export class ActionExecutor {
@@ -18,7 +18,9 @@ export class ActionExecutor {
     new UrlExpectation()
   ];
 
-  async performActions(page: Page, actionStrings: string[]) {
+  async performActions(page: Page, actionStrings: string[]): Promise<{ action: string, result?: ActionResult }[]> {
+    const results: { action: string, result?: ActionResult }[] = [];
+
     for (const actionStr of actionStrings) {
       const firstColon = actionStr.indexOf(':');
       let actionType = actionStr;
@@ -32,14 +34,18 @@ export class ActionExecutor {
       const strategy = this.actions.find(s => s.matches(actionType));
       if (strategy) {
         try {
-          await strategy.execute(page, params);
+          const res = await strategy.execute(page, params);
+          results.push({ action: actionStr, result: res });
         } catch (e) {
           console.error(`Error executing ${actionStr}:`, e);
+          results.push({ action: actionStr, result: { success: false, error: String(e) } });
         }
       } else {
         console.warn(`Unknown action type: ${actionType}`);
+        results.push({ action: actionStr });
       }
     }
+    return results;
   }
 
   async checkExpectations(page: Page, expectationStrings: string[]) {
