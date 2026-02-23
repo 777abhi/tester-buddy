@@ -14,6 +14,8 @@ import {
   SessionManager,
   Fuzzer,
   FuzzResult,
+  VisualMonitor,
+  VisualResult,
   ActionRecord,
   ExploreResult,
   CrawlResult,
@@ -24,6 +26,7 @@ export type { ExploreResult, InteractiveElement } from './features/explorer';
 export type { CrawlResult } from './features/crawler';
 export type { FormResult, FormInput } from './features/forms';
 export type { FuzzResult } from './features/fuzzer';
+export type { VisualResult } from './features/visual';
 
 export class Buddy {
   private browserManager: BrowserManager;
@@ -38,6 +41,7 @@ export class Buddy {
   private performanceMonitor: PerformanceMonitor;
   private sessionManager: SessionManager;
   private fuzzer: Fuzzer;
+  private visualMonitor: VisualMonitor;
 
   constructor(private config: BuddyConfig = {}) {
     this.browserManager = new BrowserManager();
@@ -52,6 +56,7 @@ export class Buddy {
     this.performanceMonitor = new PerformanceMonitor();
     this.sessionManager = new SessionManager();
     this.fuzzer = new Fuzzer();
+    this.visualMonitor = new VisualMonitor();
   }
 
   async launchInteractive(startUrl?: string) {
@@ -275,5 +280,58 @@ export class Buddy {
     await page.goto(url);
 
     return await this.fuzzer.fuzz(page, options);
+  }
+
+  async visualCheck(url: string, options: {
+    base?: string,
+    out?: string,
+    threshold?: number,
+    session?: string
+  } = {}): Promise<VisualResult | Buffer> {
+    try {
+      let storageState: any = options.session;
+      if (options.session) {
+          const sessionData = await this.sessionManager.loadSession(options.session);
+          storageState = { cookies: sessionData.cookies, origins: sessionData.origins };
+      }
+
+      const page = await this.browserManager.ensurePage(true, storageState);
+
+      console.log(`Navigating to ${redactUrl(url)}...`);
+      await page.goto(url);
+
+      const currentScreenshot = await this.visualMonitor.capture(page);
+
+      if (options.base) {
+        // Compare with base
+        const fs = await import('fs/promises');
+        let baseBuffer: Buffer;
+        try {
+            baseBuffer = await fs.readFile(options.base);
+        } catch (e) {
+             throw new Error(`Base image not found at ${options.base}`);
+        }
+
+        const result = this.visualMonitor.compare(baseBuffer, currentScreenshot, options.threshold);
+
+        if (options.out && result.diff) {
+            await fs.writeFile(options.out, result.diff);
+            console.log(`Diff image saved to ${options.out}`);
+        }
+
+        return result;
+      } else {
+        // Just save capture if out is provided, otherwise return buffer
+        if (options.out) {
+             const fs = await import('fs/promises');
+             await fs.writeFile(options.out, currentScreenshot);
+             console.log(`Screenshot saved to ${options.out}`);
+        }
+        return currentScreenshot;
+      }
+    } catch (e) {
+      console.error('Visual check failed:', e);
+      throw e;
+    }
   }
 }

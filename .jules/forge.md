@@ -42,3 +42,8 @@ Constraint: Relies on page reload or navigation handling to reset state between 
 Decision: Enhanced `ActionExecutor` to return `ActionResult` containing semantic locators (e.g., `getByRole`) derived at runtime via `page.evaluate`, and updated `CodeGenerator` to prioritize these over CSS selectors.
 Reasoning: CSS selectors are brittle and prone to breakage. Semantic locators (Role, Text, Label) are more robust and align with Playwright best practices, creating higher-quality tests for users.
 Constraint: The semantic detection logic runs inside `page.evaluate` and must handle various element types and attributes gracefully without crashing the browser context.
+
+## 2025-02-23 - Visual Regression Check
+Decision: Implemented `VisualMonitor` class using `pixelmatch` and `pngjs` to support pixel-perfect visual comparison.
+Reasoning: Enables automated visual regression testing for both manual testers and agents, catching CSS/layout issues that functional tests miss.
+Constraint: Requires exact image dimensions for `pixelmatch`. Current implementation throws if dimensions differ, which is strict but safe.
