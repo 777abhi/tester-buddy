@@ -1,6 +1,6 @@
-# Agent Prompt Guide for Tester Buddy
+# Tester Buddy: LLM Agent Guide
 
-This guide is the **authoritative manual** for autonomous agents (e.g., GPT-4.1) using the `tester-buddy` CLI. It describes how to interact with websites, maintain state, and verify actions without human intervention.
+This is the **authoritative manual** for autonomous agents (e.g., GPT-4.1) using the `tester-buddy` CLI. It describes how to interact with websites, maintain state, and verify actions without human intervention.
 
 ## 🤖 Core Directives for Autonomous Agents
 
@@ -9,8 +9,6 @@ This guide is the **authoritative manual** for autonomous agents (e.g., GPT-4.1)
 3.  **Monitor Errors**: Use `--monitor-errors` when critical actions (like form submission) occur to catch hidden 404s/500s or console exceptions.
 4.  **Verify Navigation**: Always check the `url` field in the JSON response to confirm if a navigation action (click/goto) succeeded.
 5.  **Sequential Execution**: You must execute commands one by one. The state file bridges the gap between executions.
-
----
 
 ## 🛠 Command Reference
 
@@ -110,6 +108,26 @@ Convert your session history into a permanent Playwright test file.
 npm run buddy -- codegen --session <path> --out <path>
 ```
 
+### 5. `scout visual`: Visual Verification
+Compare the current page appearance against a baseline image to detect visual regressions.
+
+**Syntax:**
+```bash
+# Capture a baseline
+npm run buddy -- scout visual <url> --out baseline.png
+
+# Compare current state with baseline
+npm run buddy -- scout visual <url> --base baseline.png --out diff.png
+```
+
+### 6. `scout fuzz`: Stress Testing
+Automated stress testing of input fields to find crashes and errors.
+
+**Syntax:**
+```bash
+npm run buddy -- scout fuzz <url>
+```
+
 ---
 
 ## 🔄 Standard Workflows
@@ -183,3 +201,23 @@ npm run buddy -- codegen --session <path> --out <path>
     *   *Fix*: The first `scout explore` creates the file if it doesn't exist.
 *   **Navigation loop**: You keep seeing the same page after clicking.
     *   *Fix*: The click might not have triggered. Try `click` again, or check if the button is actually a link and use `goto` with the `href`.
+
+## 🗺️ Roadmap for Agents
+
+- [x] **Site Crawling & Mapping (`scout crawl`)**: Map site structure.
+- [x] **Network & Console Monitoring**: Catch invisible bugs.
+- [x] **Visual Sitemap Generator**: Generate DOT/Mermaid graphs.
+- [x] **Test Code Generation (`codegen`)**: Convert session to Playwright test.
+- [x] **Visual Change Detection**: Compare screenshots.
+- [x] **Smart Form Fuzzing**: Automated stress testing.
+- [ ] **Interactive REPL Mode**: Instant feedback loop.
+- [ ] **`--vision` Mode**: Screenshot analysis for multimodal models.
+- [ ] **Self-Healing Selectors**: Automatic recovery from brittle selectors.
+- [ ] **Automatic Retry**: Robustness for flaky networks.
+- [ ] **Semantic Search**: Find elements by description.
+
+## Useful Links
+
+- **[Examples](./examples.md)**: Agent-specific scenarios.
+- **[Configuration Reference](../common/configuration.md)**: Mocking and roles.
+- **[Step-by-Step Walkthrough](./walkthrough.md)**: A complete tour of features.

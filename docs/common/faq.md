@@ -5,7 +5,7 @@
 **Answer:**
 No, replacing the "LLM agent helpers eyes on terminal" (specifically the `explore` and `forms` commands in `src/buddy.ts` and `src/cli.ts`) with the official Playwright CLI will **not** make the implementation cleaner or more robust. In fact, it would remove the core functionality that allows an LLM agent to "see" and interact with the page.
 
-For more details on the capabilities of this tool, please refer to the **[Usage Guide](./usage-guide.md)**.
+For more details on the capabilities of this tool, please refer to the **[Main Documentation](../../README.md)**.
 
 ## Key Reasons
 

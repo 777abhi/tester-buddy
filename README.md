@@ -9,12 +9,18 @@ Tester Buddy is a CLI-based utility designed to bridge the gap between manual ex
 
 ## Documentation
 
-The documentation has been consolidated into the `docs` folder for better organization:
+The documentation is organized by user role:
 
--   **[Usage Guide](./docs/usage-guide.md)**: The primary manual covering installation, getting started, and detailed feature usage for both manual testers and agents.
--   **[Examples](./docs/examples.md)**: A collection of real-world scenarios and recipes to help you get the most out of Tester Buddy.
--   **[Agent Prompt Guide](./docs/prompt-guide.md)**: Specific instructions and workflows designed for LLM agents using this tool.
--   **[FAQ & Design Decisions](./docs/faq.md)**: Answers to common questions and explanations of architectural choices.
+-   **[Manual Tester Guide](./docs/manual/README.md)**: For QA engineers using the tool interactively.
+    -   [Step-by-Step Walkthrough](./docs/manual/walkthrough.md)
+    -   [Examples](./docs/manual/examples.md)
+-   **[LLM Agent Guide](./docs/agent/README.md)**: For AI agents and developers building them.
+    -   [Agent Tasks Walkthrough](./docs/agent/walkthrough.md)
+    -   [Agent Examples](./docs/agent/examples.md)
+
+**Shared Resources**:
+-   **[Configuration](./docs/common/configuration.md)**: How to set up roles, mocks, and seeding.
+-   **[FAQ](./docs/common/faq.md)**: Common questions and design decisions.
 
 ## Quick Start
 
@@ -27,4 +33,4 @@ The documentation has been consolidated into the `docs` folder for better organi
     npm run buddy -- help
     ```
 
-For detailed setup and usage, please refer to the **[Usage Guide](./docs/usage-guide.md)**.
+For detailed setup and usage, please refer to the specific guide for your role above.
