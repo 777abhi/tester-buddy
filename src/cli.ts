@@ -197,6 +197,40 @@ scout
   });
 
 scout
+  .command('visual <url>')
+  .description('Perform a visual regression check')
+  .option('--base <path>', 'Path to base image for comparison')
+  .option('--out <path>', 'Path to save output (screenshot or diff)')
+  .option('--threshold <number>', 'Comparison threshold (0-1)', parseFloat, 0.1)
+  .option('--session <path>', 'Path to session file (JSON) to load state')
+  .action(async (url, options) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      const result = await buddy.visualCheck(url, options);
+
+      await buddy.close();
+      if (Buffer.isBuffer(result)) {
+        console.log(`Screenshot captured (${result.length} bytes).`);
+      } else {
+        const mismatch = (result as any).mismatch;
+        console.log(`Visual check complete.`);
+        console.log(`Mismatch pixels: ${mismatch}`);
+        if (mismatch > 0) {
+           console.log(`Mismatch found! Check output image.`);
+           process.exit(1);
+        } else {
+           console.log(`Images match!`);
+        }
+      }
+    } catch (e) {
+      console.error('Visual check failed:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
+
+scout
   .command('fuzz <url>')
   .description('Fuzz forms on a page with common attack vectors')
   .option('--json', 'Output in JSON format')

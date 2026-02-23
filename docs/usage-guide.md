@@ -155,6 +155,23 @@ Capture key performance metrics (Load Time, First Paint, Resources) for the page
 npm run buddy -- scout explore https://www.saucedemo.com/ --performance
 ```
 
+### 👁️ Visual Regression Checks
+
+Compare the current page appearance against a baseline image to detect visual regressions.
+
+```bash
+# Capture a baseline
+npm run buddy -- scout visual https://www.saucedemo.com/ --out baseline.png
+
+# Compare current state with baseline
+npm run buddy -- scout visual https://www.saucedemo.com/ --base baseline.png --out diff.png
+```
+
+**Options:**
+-   `--base <path>`: Path to the baseline image.
+-   `--out <path>`: Path to save the current screenshot (if no base) or the diff image (if mismatch).
+-   `--threshold <number>`: Sensitivity (0 to 1), default 0.1.
+
 ### 🔥 Smart Form Fuzzing
 
 Automated stress testing of input fields to find crashes and errors.
@@ -258,9 +275,9 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Usage**: `npm run buddy -- codegen --session ./my-session.json --out tests/new-flow.spec.ts`
     - **Benefits**: Removes boilerplate, ensures selector consistency, and includes expectations automatically.
 
-- [ ] **Visual Change Detection**:
+- [x] **Visual Change Detection**:
     - **Goal**: Help agents "see" unplanned visual changes.
-    - **Usage**: `npm run buddy -- scout explore <url> --diff baseline.png`
+    - **Usage**: `npm run buddy -- scout visual <url> --base baseline.png`
     - **Benefits**: Returns similarity score/description of visual changes, identifying CSS regressions.
 
 - [x] **Smart Form Fuzzing**:
@@ -274,7 +291,7 @@ We are actively working on making Tester Buddy even more powerful. Here is what 
     - **Benefits**: Keeps browser open for instant JSON command/result cycle, removing launch overhead.
 
 ### For Manual Testers
-- [ ] **Visual Regression Mode**: Take a "baseline" screenshot and automatically highlight differences in future sessions.
+- [x] **Visual Regression Mode**: Take a "baseline" screenshot and automatically highlight differences in future sessions.
 - [ ] **Mobile Device Emulation**: simple text command to switch viewport and user-agent (e.g., `device iphone-14`).
 - [ ] **Markdown Bug Report**: `report bug` command that auto-generates a ticket with trace, screenshots, and logs.
 - [ ] **Network Throttling**: simulate 3G/4G networks to test performance under poor conditions.
