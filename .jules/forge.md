@@ -46,4 +46,9 @@ Constraint: The semantic detection logic runs inside `page.evaluate` and must ha
 ## 2025-02-23 - Visual Regression Check
 Decision: Implemented `VisualMonitor` class using `pixelmatch` and `pngjs` to support pixel-perfect visual comparison.
 Reasoning: Enables automated visual regression testing for both manual testers and agents, catching CSS/layout issues that functional tests miss.
-Constraint: Requires exact image dimensions for `pixelmatch`. Current implementation throws if dimensions differ, which is strict but safe.
+Constraint: Requires exact image dimensions for `pixelmatch`. Current implementation assumes exact match for strictness.
+
+## 2025-02-24 - Unified Action Architecture
+Decision: Refactored `ActionExecutor` and `CodeGenerator` to use a Command Pattern via `ActionParser` and `Action` interface.
+Reasoning: Eliminates duplicated parsing logic and ensures that executed actions and generated code always match. Simplifies adding new action types in the future by encapsulating parsing, execution, and codegen in a single class.
+Constraint: Maintained backward compatibility for action strings, which limits support for colons in CSS selectors within the `fill` command (e.g., `fill:div:nth-child(2):value` is tricky).
