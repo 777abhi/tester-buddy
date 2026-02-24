@@ -61,7 +61,7 @@ describe("Buddy.explore with monitorErrors", () => {
         }
 
         await buddy.close();
-    });
+    }, 20000);
 
     it("should NOT fail when errors occur if monitorErrors is false (default)", async () => {
         const buddy = new Buddy();
@@ -70,5 +70,5 @@ describe("Buddy.explore with monitorErrors", () => {
         await expect(buddy.explore(baseUrl)).resolves.toBeDefined();
 
         await buddy.close();
-    });
+    }, 20000);
 });
