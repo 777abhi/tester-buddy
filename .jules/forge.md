@@ -52,3 +52,8 @@ Constraint: Requires exact image dimensions for `pixelmatch`. Current implementa
 Decision: Refactored `ActionExecutor` and `CodeGenerator` to use a Command Pattern via `ActionParser` and `Action` interface.
 Reasoning: Eliminates duplicated parsing logic and ensures that executed actions and generated code always match. Simplifies adding new action types in the future by encapsulating parsing, execution, and codegen in a single class.
 Constraint: Maintained backward compatibility for action strings, which limits support for colons in CSS selectors within the `fill` command (e.g., `fill:div:nth-child(2):value` is tricky).
+
+## 2025-02-25 - Quoted Action Parameters
+Decision: Enhanced `ActionParser` to support quoted parameters (e.g., `fill:"div:nth-child(2)":value`) via `parseParams` and `unquote` helpers.
+Reasoning: To resolve the limitation where colons in selectors (like pseudo-classes) broke the command parsing. This allows for robust interaction with complex DOM structures.
+Constraint: Ensured backward compatibility for existing unquoted commands by falling back to the original split-by-first-colon logic if quotes are absent.
