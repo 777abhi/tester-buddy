@@ -48,14 +48,48 @@ describe("ActionParser", () => {
     expect((action as any).value).toBe("key:123:abc");
   });
 
-  // Known limitation: Current parser splits by first colon, breaking selectors with colons.
-  // This test is disabled until we improve the parser heuristic.
-  // test("should parse fill action with colons in selector (pseudo-classes)", () => {
-  //   const action = ActionParser.parse("fill:div:nth-child(2):test");
-  //   expect(action).toBeInstanceOf(FillAction);
-  //   expect((action as any).selector).toBe("div:nth-child(2)");
-  //   expect((action as any).value).toBe("test");
-  // });
+  // Enhanced parser support for quoted selectors
+  test("should parse fill action with quoted selector containing colons", () => {
+    const action = ActionParser.parse('fill:"div:nth-child(2)":test');
+    expect(action).toBeInstanceOf(FillAction);
+    expect((action as any).selector).toBe("div:nth-child(2)");
+    expect((action as any).value).toBe("test");
+  });
+
+  test("should parse click action with quoted selector containing colons", () => {
+    const action = ActionParser.parse('click:"button:with:colon"');
+    expect(action).toBeInstanceOf(ClickAction);
+    expect((action as any).selector).toBe("button:with:colon");
+  });
+
+  test("should parse fill action with quoted value containing colons", () => {
+    const action = ActionParser.parse('fill:#id:"value:complex"');
+    expect(action).toBeInstanceOf(FillAction);
+    expect((action as any).selector).toBe("#id");
+    expect((action as any).value).toBe("value:complex");
+  });
+
+  test("should parse fill action with both quoted", () => {
+    const action = ActionParser.parse('fill:"#id:complex":"value:complex"');
+    expect(action).toBeInstanceOf(FillAction);
+    expect((action as any).selector).toBe("#id:complex");
+    expect((action as any).value).toBe("value:complex");
+  });
+
+  test("should parse wait action with quoted number", () => {
+    const action = ActionParser.parse('wait:"1000"');
+    expect(action).toBeInstanceOf(WaitAction);
+    expect((action as any).ms).toBe(1000);
+  });
+
+  test("should handle escaped quotes in quoted selector", () => {
+    // Input: fill:"input[name=\"foo\"]":val
+    // In JS string literal: "fill:\"input[name=\\\"foo\\\"]\":val"
+    const action = ActionParser.parse('fill:"input[name=\\"foo\\"]":val');
+    expect(action).toBeInstanceOf(FillAction);
+    expect((action as any).selector).toBe('input[name="foo"]');
+    expect((action as any).value).toBe("val");
+  });
 
   test("should parse fill action with complex selector", () => {
     const action = ActionParser.parse("fill:input[name='email']:user@test.com");

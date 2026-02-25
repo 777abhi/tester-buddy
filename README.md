@@ -37,5 +37,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 ## Roadmap
 
--   **Future Improvement**: Enhance `ActionParser` to support complex CSS selectors (e.g., pseudo-classes with colons) in `fill` commands, possibly via a new delimiter or escaping syntax.
--   **Architecture**: The codebase now uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
+-   **Future Improvement**: Implement `LoopAction` and `ConditionAction` to support complex workflows (e.g. `loop:10:click:button` or `if:selector:click:other`) directly from the CLI.
+-   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
