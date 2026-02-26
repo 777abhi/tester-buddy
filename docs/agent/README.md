@@ -30,6 +30,8 @@ npm run buddy -- scout explore <url> --json --session <path> [options]
     *   `scroll:<target>`: Scroll page (e.g., `scroll:bottom`, `scroll:#footer`).
     *   `wait:<ms>`: Wait for X milliseconds (e.g., `wait:2000`).
     *   `goto:<url>`: Navigate to a URL.
+    *   `loop:<count>:<action>`: Repeat an action (e.g., `loop:5:click:#load-more`).
+    *   `if:<selector>:<action>`: Execute only if selector exists (e.g., `if:#popup:click:.close`).
 *   `--expect "type:value"`: Verify state.
     *   `text:<string>`: Page contains text.
     *   `selector:<selector>`: Element exists.
