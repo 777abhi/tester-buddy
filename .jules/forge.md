@@ -57,3 +57,8 @@ Constraint: Maintained backward compatibility for action strings, which limits s
 Decision: Enhanced `ActionParser` to support quoted parameters (e.g., `fill:"div:nth-child(2)":value`) via `parseParams` and `unquote` helpers.
 Reasoning: To resolve the limitation where colons in selectors (like pseudo-classes) broke the command parsing. This allows for robust interaction with complex DOM structures.
 Constraint: Ensured backward compatibility for existing unquoted commands by falling back to the original split-by-first-colon logic if quotes are absent.
+
+## 2025-02-26 - Control Flow Actions
+Decision: Implemented `LoopAction` and `ConditionAction` in `ActionParser` using recursive parsing and `peelParam` helper.
+Reasoning: Enables agents to perform repetitive tasks or conditional logic (e.g., closing a banner if it exists) without a full feedback loop.
+Constraint: Actions nested within loops or conditions must be carefully quoted if they contain colons.

@@ -1,5 +1,5 @@
 import { Action } from './interface';
-import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, ExpectAction } from './implementations';
+import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, ExpectAction, LoopAction, ConditionAction } from './implementations';
 
 export class ActionParser {
   static parse(actionString: string): Action {
@@ -26,45 +26,77 @@ export class ActionParser {
         return new ScrollAction(this.unquote(params));
       case 'expect':
         return this.parseExpect(params);
+      case 'loop':
+        return this.parseLoop(params);
+      case 'if':
+        return this.parseCondition(params);
       default:
         throw new Error(`Unknown action type: ${type}`);
     }
   }
 
   private static parseFill(params: string): FillAction {
-    // If params starts with a quote, we attempt to parse a quoted selector
+    const [selector, valueRaw] = this.peelParam(params);
+    if (!selector || !valueRaw) {
+       throw new Error(`Invalid fill params: ${params}. Format: fill:selector:value`);
+    }
+    return new FillAction(selector, this.unquote(valueRaw));
+  }
+
+  private static parseExpect(params: string): ExpectAction {
+    const [type, valueRaw] = this.peelParam(params);
+    if (!type || !valueRaw) {
+        throw new Error(`Invalid expect params: ${params}. Format: expect:type:value`);
+    }
+    return new ExpectAction(type, this.unquote(valueRaw));
+  }
+
+  private static parseLoop(params: string): LoopAction {
+    const [countStr, actionStrRaw] = this.peelParam(params);
+    const count = parseInt(countStr, 10);
+    if (isNaN(count)) {
+      throw new Error(`Invalid loop count: ${countStr}`);
+    }
+    if (!actionStrRaw) {
+        throw new Error(`Invalid loop params: ${params}. Format: loop:count:action`);
+    }
+    const actionStr = this.unquote(actionStrRaw);
+    const action = this.parse(actionStr);
+    return new LoopAction(count, action);
+  }
+
+  private static parseCondition(params: string): ConditionAction {
+    const [selector, actionStrRaw] = this.peelParam(params);
+    if (!selector || !actionStrRaw) {
+      throw new Error(`Invalid if params: ${params}. Format: if:selector:action`);
+    }
+    const actionStr = this.unquote(actionStrRaw);
+    const action = this.parse(actionStr);
+    return new ConditionAction(selector, action);
+  }
+
+  private static peelParam(params: string): [string, string] {
     if (params.startsWith('"')) {
       const endQuote = this.findEndQuote(params, 1);
       if (endQuote !== -1) {
-        // Check if the character after the quote is the delimiter
         if (params[endQuote + 1] === ':') {
-          const selector = this.unquote(params.substring(0, endQuote + 1));
-          const value = this.unquote(params.substring(endQuote + 2));
-          return new FillAction(selector, value);
+          return [
+            this.unquote(params.substring(0, endQuote + 1)),
+            params.substring(endQuote + 2)
+          ];
         }
       }
     }
 
-    // Fallback: Split by first colon (legacy behavior)
     const firstColon = params.indexOf(':');
     if (firstColon === -1) {
-      throw new Error(`Invalid fill params: ${params}. Format: fill:selector:value`);
+      // Return the whole string as the first param, empty string as remainder
+      return [this.unquote(params), ''];
     }
-    const selector = this.unquote(params.substring(0, firstColon));
-    const value = this.unquote(params.substring(firstColon + 1));
-    return new FillAction(selector, value);
-  }
-
-  private static parseExpect(params: string): ExpectAction {
-    // Expectation format: expect:type:value
-    // We assume 'type' doesn't contain colons, so we split on first colon.
-    const firstColon = params.indexOf(':');
-    if (firstColon === -1) {
-        throw new Error(`Invalid expect params: ${params}. Format: expect:type:value`);
-    }
-    const type = this.unquote(params.substring(0, firstColon));
-    const value = this.unquote(params.substring(firstColon + 1));
-    return new ExpectAction(type, value);
+    return [
+      this.unquote(params.substring(0, firstColon)),
+      params.substring(firstColon + 1)
+    ];
   }
 
   private static unquote(str: string): string {

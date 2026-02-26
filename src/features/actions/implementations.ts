@@ -167,10 +167,6 @@ export class ExpectAction implements Action {
       }
 
       if (!passed) {
-        // We set exitCode but return success: true technically because the action "executed",
-        // or should we return success: false?
-        // ActionExecutor sets process.exitCode = 1 but continues?
-        // strategies.ts returns boolean.
         process.exitCode = 1;
         return { success: false, error: 'Expectation failed' };
       }
@@ -190,5 +186,52 @@ export class ExpectAction implements Action {
       return `await expect(page).toHaveURL(new RegExp('${this.value}'));`;
     }
     return `// Unknown expectation type: ${this.type}`;
+  }
+}
+
+export class LoopAction implements Action {
+  constructor(public count: number, public action: Action) {}
+
+  async execute(page: Page): Promise<ActionResult> {
+    console.log(`Looping ${this.count} times`);
+    for (let i = 0; i < this.count; i++) {
+      const result = await this.action.execute(page);
+      if (!result.success) {
+        return result;
+      }
+    }
+    return { success: true };
+  }
+
+  toCode(semanticLocator?: string): string {
+    return `for (let i = 0; i < ${this.count}; i++) {
+  ${this.action.toCode()}
+}`;
+  }
+}
+
+export class ConditionAction implements Action {
+  constructor(public selector: string, public action: Action) {}
+
+  async execute(page: Page): Promise<ActionResult> {
+    console.log(`Checking condition: ${this.selector}`);
+    try {
+      const el = await page.$(this.selector);
+      if (el) {
+        console.log(`Condition met: ${this.selector} exists. Executing inner action.`);
+        return await this.action.execute(page);
+      } else {
+        console.log(`Condition not met: ${this.selector} does not exist. Skipping.`);
+        return { success: true };
+      }
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  toCode(semanticLocator?: string): string {
+    return `if (await page.$('${this.selector}')) {
+  ${this.action.toCode()}
+}`;
   }
 }
