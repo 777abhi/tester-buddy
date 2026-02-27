@@ -27,6 +27,7 @@ export type { CrawlResult } from './features/crawler';
 export type { FormResult, FormInput } from './features/forms';
 export type { FuzzResult } from './features/fuzzer';
 export type { VisualResult } from './features/visual';
+import { ActionResult } from './features';
 
 export class Buddy {
   private browserManager: BrowserManager;
@@ -77,6 +78,18 @@ export class Buddy {
     if (page) {
       await this.networkManager.applyMocks(page);
     }
+  }
+
+  async executeAction(action: string): Promise<ActionResult> {
+    const page = this.browserManager.getPage();
+    if (!page) {
+      throw new Error('Page not initialized');
+    }
+    const results = await this.actionExecutor.performActions(page, [action]);
+    if (results.length > 0 && results[0].result) {
+      return results[0].result;
+    }
+    return { success: false, error: 'No result returned' };
   }
 
   async injectState(userRole: string) {

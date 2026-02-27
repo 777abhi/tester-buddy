@@ -130,6 +130,14 @@ Automated stress testing of input fields to find crashes and errors.
 npm run buddy -- scout fuzz <url>
 ```
 
+### 7. `scout repl`: Interactive REPL
+Launch an interactive Read-Eval-Print Loop to explore and control the browser in real-time.
+
+**Syntax:**
+```bash
+npm run buddy -- scout repl <url>
+```
+
 ---
 
 ## 🔄 Standard Workflows
@@ -212,7 +220,7 @@ npm run buddy -- scout fuzz <url>
 - [x] **Test Code Generation (`codegen`)**: Convert session to Playwright test.
 - [x] **Visual Change Detection**: Compare screenshots.
 - [x] **Smart Form Fuzzing**: Automated stress testing.
-- [ ] **Interactive REPL Mode**: Instant feedback loop.
+- [x] **Interactive REPL Mode**: Instant feedback loop.
 - [ ] **`--vision` Mode**: Screenshot analysis for multimodal models.
 - [ ] **Self-Healing Selectors**: Automatic recovery from brittle selectors.
 - [ ] **Automatic Retry**: Robustness for flaky networks.

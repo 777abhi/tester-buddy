@@ -37,5 +37,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 ## Roadmap
 
--   **Future Improvement**: Implement `scout repl` to allow interactive exploration and command execution without restarting the browser.
+-   **Future Improvement**: Implement `Self-Healing Selectors` to automatically recover from brittle selectors when the UI changes.
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
