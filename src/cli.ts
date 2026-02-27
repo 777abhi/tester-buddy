@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { Buddy } from './buddy';
 import { ConfigLoader } from './config';
-import { generateMermaidGraph, SessionManager, CodeGenerator } from './features';
+import { generateMermaidGraph, SessionManager, CodeGenerator, REPL } from './features';
 import { writeFileSync } from 'fs';
 
 const program = new Command();
@@ -316,6 +316,27 @@ scout
     }
   });
 
+scout
+  .command('repl <url>')
+  .description('Launch an interactive REPL for a page')
+  .action(async (url) => {
+    try {
+      const config = await ConfigLoader.load();
+      buddy = new Buddy(config);
+      // Scout commands run headless by default. Use 'sidekick' for headed mode.
+      await buddy.launch(true);
+      await buddy.navigate(url);
+
+      const repl = new REPL(buddy);
+      await repl.start();
+
+      await buddy.close();
+    } catch (e) {
+      console.error('Error:', e);
+      await buddy?.close();
+      process.exit(1);
+    }
+  });
 
 let isClosing = false;
 async function cleanup() {

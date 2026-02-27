@@ -16,3 +16,4 @@ export * from './session';
 export * from './codegen';
 export * from './fuzzer';
 export * from './visual';
+export * from './repl';
