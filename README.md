@@ -37,5 +37,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 ## Roadmap
 
--   **Future Improvement**: Implement `Self-Healing Selectors` to automatically recover from brittle selectors when the UI changes.
+-   **Future Improvement**: Implement `AI-Powered Test Generation` to leverage LLMs for generating comprehensive test suites directly from exploration sessions.
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
