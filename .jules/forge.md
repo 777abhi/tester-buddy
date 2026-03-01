@@ -62,3 +62,8 @@ Constraint: Ensured backward compatibility for existing unquoted commands by fal
 Decision: Implemented `LoopAction` and `ConditionAction` in `ActionParser` using recursive parsing and `peelParam` helper.
 Reasoning: Enables agents to perform repetitive tasks or conditional logic (e.g., closing a banner if it exists) without a full feedback loop.
 Constraint: Actions nested within loops or conditions must be carefully quoted if they contain colons.
+
+## 2025-02-27 - Self-Healing Selectors
+Decision: Implemented `Healer` class and integrated it into `ActionExecutor.performActions`.
+Reasoning: Automatically recovers from brittle selectors (e.g., IDs or classes that change) by applying heuristics (like text or attributes) to find the intended element when the original selector fails. Improves robustness against UI changes.
+Constraint: The heuristic approach relies on `page.evaluate` and simple DOM traversal; it might select unintended elements if the extracted keyword is too generic.
