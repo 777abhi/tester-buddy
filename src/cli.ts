@@ -364,6 +364,7 @@ program
   .description('Generate Playwright test code from a session')
   .requiredOption('--session <path>', 'Path to session file (JSON)')
   .option('--out <path>', 'Path to output file (default: stdout)')
+  .option('--prompt', 'Output an LLM prompt instead of raw code')
   .action(async (options) => {
     try {
       const sessionPath = options.session;
@@ -376,13 +377,15 @@ program
         console.warn('Session has no history actions.');
       }
 
-      const code = CodeGenerator.generate(sessionData.history);
+      const outputContent = options.prompt
+        ? CodeGenerator.generatePrompt(sessionData.history)
+        : CodeGenerator.generate(sessionData.history);
 
       if (outputPath) {
-        writeFileSync(outputPath, code);
-        console.log(`Test code generated at: ${outputPath}`);
+        writeFileSync(outputPath, outputContent);
+        console.log(`${options.prompt ? 'Prompt' : 'Test code'} generated at: ${outputPath}`);
       } else {
-        console.log(code);
+        console.log(outputContent);
       }
     } catch (e) {
       console.error('Codegen failed:', e);

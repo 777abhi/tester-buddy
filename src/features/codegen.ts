@@ -39,4 +39,24 @@ export class CodeGenerator {
     lines.push("});");
     return lines.join('\n');
   }
+
+  static generatePrompt(history: ActionRecord[]): string {
+    const lines: string[] = [
+      "Please generate a comprehensive Playwright test suite for the following sequence of actions.",
+      "The test should use semantic locators where possible and include standard imports and test blocks.",
+      "",
+      "Actions History:"
+    ];
+
+    for (const record of history) {
+      lines.push(`- Action: ${record.action}`);
+      if (record.semantic) {
+        lines.push(`  Semantic Locator: ${record.semantic}`);
+      }
+    }
+
+    lines.push("");
+    lines.push("Ensure the code follows best practices for Playwright testing.");
+    return lines.join('\n');
+  }
 }
