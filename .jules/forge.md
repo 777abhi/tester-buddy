@@ -67,3 +67,8 @@ Constraint: Actions nested within loops or conditions must be carefully quoted i
 Decision: Implemented `Healer` class and integrated it into `ActionExecutor.performActions`.
 Reasoning: Automatically recovers from brittle selectors (e.g., IDs or classes that change) by applying heuristics (like text or attributes) to find the intended element when the original selector fails. Improves robustness against UI changes.
 Constraint: The heuristic approach relies on `page.evaluate` and simple DOM traversal; it might select unintended elements if the extracted keyword is too generic.
+
+## 2025-03-01 - AI-Powered Test Generation
+Decision: Implemented `generatePrompt` in `CodeGenerator` and added `--prompt` flag to `codegen` command.
+Reasoning: To provide a foundational integration point for LLM-assisted test suite generation without immediately coupling the CLI to specific provider SDKs (OpenAI/Anthropic). This keeps the tool lightweight and allows users to bring their own LLM workflow.
+Constraint: Requires users to manually copy/paste the generated prompt to their LLM interface. Future iterations should directly integrate API calls for an end-to-end experience.
