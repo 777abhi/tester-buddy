@@ -72,3 +72,8 @@ Constraint: The heuristic approach relies on `page.evaluate` and simple DOM trav
 Decision: Implemented `generatePrompt` in `CodeGenerator` and added `--prompt` flag to `codegen` command.
 Reasoning: To provide a foundational integration point for LLM-assisted test suite generation without immediately coupling the CLI to specific provider SDKs (OpenAI/Anthropic). This keeps the tool lightweight and allows users to bring their own LLM workflow.
 Constraint: Requires users to manually copy/paste the generated prompt to their LLM interface. Future iterations should directly integrate API calls for an end-to-end experience.
+
+## 2025-03-02 - LLM Test Generation Integration
+Decision: Implemented `LLMClient` using the native `fetch` API to call OpenAI's endpoint, integrated into the `codegen` command via the `--llm` flag.
+Reasoning: Automates the entire workflow of transforming an exploration session into a Playwright test file. By using native `fetch`, we avoid introducing heavy, third-party SDK dependencies (like `openai`), keeping the CLI lightweight.
+Constraint: Currently relies on the `OPENAI_API_KEY` environment variable. The implementation assumes the LLM returns code wrapped in Markdown blocks (e.g., ```typescript). Future enhancements could support other LLM providers (e.g., Anthropic, Ollama) via configuration.

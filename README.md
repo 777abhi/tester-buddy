@@ -37,6 +37,6 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 ## Roadmap
 
--   **AI-Powered Test Generation**: Easily generate Playwright test suites via LLM prompts from exploration sessions using the `--prompt` option in `codegen`.
+-   **AI-Powered Test Generation**: Easily generate Playwright test suites via LLM prompts from exploration sessions using the `--prompt` option in `codegen`, or generate the test directly using the `--llm` flag.
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
--   **Future Improvement**: Integrate direct API calls to LLM providers (e.g., OpenAI, Anthropic) within the `codegen --prompt` pipeline to automatically generate and save the actual test file without requiring manual copy-pasting of the prompt.
+-   **Future Improvement**: Add support for local LLMs via Ollama to ensure privacy for enterprise test generation, allowing users to run the `--llm` feature without sending sensitive session data to external APIs.

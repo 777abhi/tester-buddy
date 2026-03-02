@@ -17,3 +17,4 @@ export * from './codegen';
 export * from './fuzzer';
 export * from './visual';
 export * from './repl';
+export * from './llm_client';
