@@ -365,7 +365,7 @@ program
   .requiredOption('--session <path>', 'Path to session file (JSON)')
   .option('--out <path>', 'Path to output file (default: stdout)')
   .option('--prompt', 'Output an LLM prompt instead of raw code')
-  .option('--llm', 'Generate Playwright test suite using LLM (requires OPENAI_API_KEY)')
+  .option('--llm', 'Generate Playwright test suite using LLM (requires OPENAI_API_KEY or OLLAMA_MODEL)')
   .action(async (options) => {
     try {
       const sessionPath = options.session;

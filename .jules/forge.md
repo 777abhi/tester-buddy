@@ -77,3 +77,8 @@ Constraint: Requires users to manually copy/paste the generated prompt to their 
 Decision: Implemented `LLMClient` using the native `fetch` API to call OpenAI's endpoint, integrated into the `codegen` command via the `--llm` flag.
 Reasoning: Automates the entire workflow of transforming an exploration session into a Playwright test file. By using native `fetch`, we avoid introducing heavy, third-party SDK dependencies (like `openai`), keeping the CLI lightweight.
 Constraint: Currently relies on the `OPENAI_API_KEY` environment variable. The implementation assumes the LLM returns code wrapped in Markdown blocks (e.g., ```typescript). Future enhancements could support other LLM providers (e.g., Anthropic, Ollama) via configuration.
+
+## 2025-03-03 - Local LLM Support via Ollama
+Decision: Integrated Ollama support into `LLMClient` via the `OLLAMA_MODEL` and `OLLAMA_URL` environment variables.
+Reasoning: Enables privacy-focused enterprise test generation by allowing users to run the `--llm` codegen feature entirely locally without sending sensitive session data to external APIs.
+Constraint: When using Ollama, the model must be pre-pulled by the user. The fallback still requires an `OPENAI_API_KEY`.
