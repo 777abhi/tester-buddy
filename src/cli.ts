@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { Buddy } from './buddy';
 import { ConfigLoader } from './config';
-import { generateMermaidGraph, SessionManager, CodeGenerator, REPL } from './features';
+import { generateMermaidGraph, SessionManager, CodeGenerator, REPL, LLMClient } from './features';
 import { writeFileSync } from 'fs';
 
 const program = new Command();
@@ -365,6 +365,7 @@ program
   .requiredOption('--session <path>', 'Path to session file (JSON)')
   .option('--out <path>', 'Path to output file (default: stdout)')
   .option('--prompt', 'Output an LLM prompt instead of raw code')
+  .option('--llm', 'Generate Playwright test suite using LLM (requires OPENAI_API_KEY)')
   .action(async (options) => {
     try {
       const sessionPath = options.session;
@@ -377,18 +378,28 @@ program
         console.warn('Session has no history actions.');
       }
 
-      const outputContent = options.prompt
-        ? CodeGenerator.generatePrompt(sessionData.history)
-        : CodeGenerator.generate(sessionData.history);
+      let outputContent: string;
+
+      if (options.llm) {
+        console.log('Generating code using LLM...');
+        const prompt = CodeGenerator.generatePrompt(sessionData.history);
+        const llmClient = new LLMClient();
+        outputContent = await llmClient.generateTestCode(prompt);
+      } else if (options.prompt) {
+        outputContent = CodeGenerator.generatePrompt(sessionData.history);
+      } else {
+        outputContent = CodeGenerator.generate(sessionData.history);
+      }
 
       if (outputPath) {
         writeFileSync(outputPath, outputContent);
-        console.log(`${options.prompt ? 'Prompt' : 'Test code'} generated at: ${outputPath}`);
+        const type = options.llm ? 'LLM Test code' : (options.prompt ? 'Prompt' : 'Test code');
+        console.log(`${type} generated at: ${outputPath}`);
       } else {
         console.log(outputContent);
       }
-    } catch (e) {
-      console.error('Codegen failed:', e);
+    } catch (e: any) {
+      console.error('Codegen failed:', e.message || e);
       process.exit(1);
     }
   });
