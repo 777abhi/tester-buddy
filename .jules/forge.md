@@ -82,3 +82,8 @@ Constraint: Currently relies on the `OPENAI_API_KEY` environment variable. The i
 Decision: Integrated Ollama support into `LLMClient` via the `OLLAMA_MODEL` and `OLLAMA_URL` environment variables.
 Reasoning: Enables privacy-focused enterprise test generation by allowing users to run the `--llm` codegen feature entirely locally without sending sensitive session data to external APIs.
 Constraint: When using Ollama, the model must be pre-pulled by the user. The fallback still requires an `OPENAI_API_KEY`.
+
+## 2026-03-04 - Anthropic LLM Integration
+Decision: Added support for Anthropic Claude models via the `ANTHROPIC_API_KEY` in `LLMClient` using native `fetch`.
+Reasoning: To offer users more flexibility when choosing remote models for automated test generation, while maintaining a lightweight architecture without third-party SDK dependencies.
+Constraint: Current implementation targets `claude-3-5-sonnet-20241022` and passes `max_tokens` alongside `system` messages as required by the Anthropic API.
