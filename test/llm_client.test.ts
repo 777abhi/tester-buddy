@@ -29,9 +29,9 @@ describe('LLMClient', () => {
   });
 
   describe('Configuration and Errors', () => {
-    it('should throw an error if no API key or Ollama model is provided', () => {
+    it('should throw an error if no API key or Ollama model is provided', async () => {
       const client = new LLMClient();
-      expect(client.generateTestCode('prompt')).rejects.toThrow('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
+      await expect(client.generateTestCode('prompt error 1')).rejects.toThrow('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
     });
 
     it('should throw an error if the API request fails', async () => {
@@ -42,7 +42,7 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      expect(client.generateTestCode('prompt')).rejects.toThrow('LLM API returned status 400: {"error":{"message":"Bad request"}}');
+      await expect(client.generateTestCode('prompt error 2')).rejects.toThrow('LLM API returned status 400: {"error":{"message":"Bad request"}}');
     });
   });
 
@@ -64,7 +64,11 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      const result = await client.generateTestCode('my prompt');
+      // force empty cache read by overriding class behavior
+      (client as any).cache.get = mock(async () => null);
+      (client as any).cache.set = mock(async () => {});
+      // Use unique prompt to bypass cache
+      const result = await client.generateTestCode('my prompt unique openai');
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(global.fetch).toHaveBeenCalledWith('https://api.openai.com/v1/chat/completions', expect.objectContaining({
@@ -73,7 +77,7 @@ describe('LLMClient', () => {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer test-key'
         },
-        body: expect.stringContaining('my prompt')
+        body: expect.stringContaining('my prompt unique openai')
       }));
 
       // Should extract code from markdown block
@@ -97,7 +101,7 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      const result = await client.generateTestCode('prompt');
+      const result = await client.generateTestCode('prompt no block unique');
 
       expect(result).toBe('import { test } from "@playwright/test";\n// some test');
     });
@@ -119,7 +123,10 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      const result = await client.generateTestCode('my anthropic prompt');
+      // force empty cache read by overriding class behavior
+      (client as any).cache.get = mock(async () => null);
+      (client as any).cache.set = mock(async () => {});
+      const result = await client.generateTestCode('my anthropic prompt unique');
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(global.fetch).toHaveBeenCalledWith('https://api.anthropic.com/v1/messages', expect.objectContaining({
@@ -129,7 +136,7 @@ describe('LLMClient', () => {
           'x-api-key': 'test-anthropic-key',
           'anthropic-version': '2023-06-01'
         },
-        body: expect.stringContaining('my anthropic prompt')
+        body: expect.stringContaining('my anthropic prompt unique')
       }));
 
       // Should extract code from markdown block
@@ -151,7 +158,7 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      const result = await client.generateTestCode('prompt');
+      const result = await client.generateTestCode('prompt anthropic no block unique');
 
       expect(result).toBe('import { test } from "@playwright/test";\n// some anthropic test');
     });
@@ -170,7 +177,10 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      const result = await client.generateTestCode('test prompt');
+      // force empty cache read by overriding class behavior
+      (client as any).cache.get = mock(async () => null);
+      (client as any).cache.set = mock(async () => {});
+      const result = await client.generateTestCode('test prompt ollama unique');
 
       expect(result).toBe('// ollama code');
       expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -185,7 +195,7 @@ describe('LLMClient', () => {
       expect(body.model).toBe('llama3');
       expect(body.stream).toBe(false);
       expect(body.messages.length).toBe(2);
-      expect(body.messages[1].content).toBe('test prompt');
+      expect(body.messages[1].content).toBe('test prompt ollama unique');
     });
 
     it('should use custom OLLAMA_URL if provided', async () => {
@@ -201,7 +211,10 @@ describe('LLMClient', () => {
       ) as any;
 
       const client = new LLMClient();
-      await client.generateTestCode('test prompt');
+      // force empty cache read by overriding class behavior
+      (client as any).cache.get = mock(async () => null);
+      (client as any).cache.set = mock(async () => {});
+      await client.generateTestCode('test prompt ollama url unique');
 
       const fetchCall = (global.fetch as any).mock.calls[0];
       expect(fetchCall[0]).toBe('http://custom-ollama:11434/api/chat');

@@ -1,5 +1,18 @@
+import { LLMCache } from './llm_cache';
+
 export class LLMClient {
+  private cache: LLMCache;
+
+  constructor() {
+    this.cache = new LLMCache();
+  }
+
   async generateTestCode(prompt: string): Promise<string> {
+    const cachedResponse = await this.cache.get(prompt);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     const ollamaModel = process.env.OLLAMA_MODEL;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -83,12 +96,17 @@ export class LLMClient {
       content = data.choices[0].message.content;
     }
 
+    let finalCode: string;
+
     // Extract code from markdown block if present
     const codeBlockMatch = content.match(/```(?:typescript|ts)?\n([\s\S]*?)```/);
     if (codeBlockMatch && codeBlockMatch[1]) {
-      return codeBlockMatch[1].trim();
+      finalCode = codeBlockMatch[1].trim();
+    } else {
+      finalCode = content.trim();
     }
 
-    return content.trim();
+    await this.cache.set(prompt, finalCode);
+    return finalCode;
   }
 }
