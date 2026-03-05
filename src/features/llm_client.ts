@@ -2,16 +2,15 @@ export class LLMClient {
   async generateTestCode(prompt: string): Promise<string> {
     const apiKey = process.env.OPENAI_API_KEY;
     const ollamaModel = process.env.OLLAMA_MODEL;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
-    if (!apiKey && !ollamaModel) {
-      throw new Error('Either OPENAI_API_KEY or OLLAMA_MODEL environment variable is required');
+    if (!apiKey && !ollamaModel && !anthropicKey) {
+      throw new Error('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
     }
 
+    const systemPrompt = 'You are an expert software engineer in test. Your job is to write Playwright test code based on the user\'s prompt.';
+
     const messages = [
-      {
-        role: 'system',
-        content: 'You are an expert software engineer in test. Your job is to write Playwright test code based on the user\'s prompt.'
-      },
       {
         role: 'user',
         content: prompt
@@ -20,7 +19,23 @@ export class LLMClient {
 
     let response: Response;
 
-    if (ollamaModel) {
+    if (anthropicKey) {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-sonnet-20241022', // Consider parameterizing if needed
+          system: systemPrompt,
+          messages: messages,
+          temperature: 0.2,
+          max_tokens: 4096
+        })
+      });
+    } else if (ollamaModel) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434/api/chat';
       response = await fetch(ollamaUrl, {
         method: 'POST',
@@ -29,7 +44,7 @@ export class LLMClient {
         },
         body: JSON.stringify({
           model: ollamaModel,
-          messages: messages,
+          messages: [{ role: 'system', content: systemPrompt }, ...messages],
           stream: false,
           options: {
             temperature: 0.2
@@ -46,7 +61,7 @@ export class LLMClient {
         },
         body: JSON.stringify({
           model: 'gpt-4o', // Consider parameterizing if needed
-          messages: messages,
+          messages: [{ role: 'system', content: systemPrompt }, ...messages],
           temperature: 0.2
         })
       });
@@ -60,7 +75,9 @@ export class LLMClient {
     const data = await response.json();
     let content: string;
 
-    if (ollamaModel) {
+    if (anthropicKey) {
+      content = data.content[0].text;
+    } else if (ollamaModel) {
       content = data.message.content;
     } else {
       content = data.choices[0].message.content;

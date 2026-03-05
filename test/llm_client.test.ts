@@ -6,15 +6,18 @@ describe('LLMClient', () => {
   let originalOpenAiKey: string | undefined;
   let originalOllamaModel: string | undefined;
   let originalOllamaUrl: string | undefined;
+  let originalAnthropicKey: string | undefined;
 
   beforeEach(() => {
     originalFetch = global.fetch;
     originalOpenAiKey = process.env.OPENAI_API_KEY;
     originalOllamaModel = process.env.OLLAMA_MODEL;
     originalOllamaUrl = process.env.OLLAMA_URL;
+    originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
     delete process.env.OPENAI_API_KEY;
     delete process.env.OLLAMA_MODEL;
     delete process.env.OLLAMA_URL;
+    delete process.env.ANTHROPIC_API_KEY;
   });
 
   afterEach(() => {
@@ -22,12 +25,13 @@ describe('LLMClient', () => {
     if (originalOpenAiKey !== undefined) process.env.OPENAI_API_KEY = originalOpenAiKey;
     if (originalOllamaModel !== undefined) process.env.OLLAMA_MODEL = originalOllamaModel;
     if (originalOllamaUrl !== undefined) process.env.OLLAMA_URL = originalOllamaUrl;
+    if (originalAnthropicKey !== undefined) process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
   });
 
   describe('Configuration and Errors', () => {
     it('should throw an error if no API key or Ollama model is provided', () => {
       const client = new LLMClient();
-      expect(client.generateTestCode('prompt')).rejects.toThrow('Either OPENAI_API_KEY or OLLAMA_MODEL environment variable is required');
+      expect(client.generateTestCode('prompt')).rejects.toThrow('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
     });
 
     it('should throw an error if the API request fails', async () => {
@@ -96,6 +100,60 @@ describe('LLMClient', () => {
       const result = await client.generateTestCode('prompt');
 
       expect(result).toBe('import { test } from "@playwright/test";\n// some test');
+    });
+  });
+
+  describe('Anthropic Support', () => {
+    it('should call the Anthropic API with the prompt and return the generated code', async () => {
+      process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
+      const mockResponse = {
+        content: [
+          {
+            text: '```typescript\nimport { test } from "@playwright/test";\n```'
+          }
+        ]
+      };
+
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
+      ) as any;
+
+      const client = new LLMClient();
+      const result = await client.generateTestCode('my anthropic prompt');
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(global.fetch).toHaveBeenCalledWith('https://api.anthropic.com/v1/messages', expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'test-anthropic-key',
+          'anthropic-version': '2023-06-01'
+        },
+        body: expect.stringContaining('my anthropic prompt')
+      }));
+
+      // Should extract code from markdown block
+      expect(result).toBe('import { test } from "@playwright/test";');
+    });
+
+    it('should return raw content if no code block is found for anthropic', async () => {
+      process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
+      const mockResponse = {
+        content: [
+          {
+            text: 'import { test } from "@playwright/test";\n// some anthropic test'
+          }
+        ]
+      };
+
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
+      ) as any;
+
+      const client = new LLMClient();
+      const result = await client.generateTestCode('prompt');
+
+      expect(result).toBe('import { test } from "@playwright/test";\n// some anthropic test');
     });
   });
 
