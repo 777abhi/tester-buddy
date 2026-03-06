@@ -1,46 +1,26 @@
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import * as fsPromises from 'fs/promises';
+import * as fs from 'fs';
+import * as os from 'os';
 import { join } from 'path';
 import { createHash } from 'crypto';
-
-// Setup fs mock
-const mockFs = {
-  data: '{}',
-  fileExists: false,
-};
-
-const mockReadFile = mock(async (path: string, encoding: string) => {
-  if (!mockFs.fileExists) {
-    const error = new Error('ENOENT');
-    (error as any).code = 'ENOENT';
-    throw error;
-  }
-  return mockFs.data;
-});
-
-const mockWriteFile = mock(async (path: string, data: string, encoding: string) => {
-  mockFs.data = data;
-  mockFs.fileExists = true;
-});
-
-mock.module('fs/promises', () => ({
-  readFile: mockReadFile,
-  writeFile: mockWriteFile,
-}));
-
+import { LLMCache } from '../src/features/llm_cache';
 
 describe('LLMCache', () => {
-  let cache: any;
+  let cache: LLMCache;
+  let tempDir: string;
+  let cacheFilePath: string;
 
-  beforeEach(async () => {
-    mockFs.data = '{}';
-    mockFs.fileExists = false;
-    const mod = await import('../src/features/llm_cache');
-    cache = new mod.LLMCache('/test-dir');
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(join(os.tmpdir(), 'llm-cache-test-'));
+    cacheFilePath = join(tempDir, '.llm-cache.json');
+    cache = new LLMCache(tempDir);
   });
 
   afterEach(() => {
-    mock.restore();
+    if (fs.existsSync(tempDir)) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
   it('should get null when cache is empty', async () => {
@@ -57,8 +37,7 @@ describe('LLMCache', () => {
   it('should handle reading from an existing cache file', async () => {
     const prompt = 'existing prompt';
     const key = createHash('sha256').update(prompt).digest('hex');
-    mockFs.data = JSON.stringify({ [key]: 'let b = 2;' });
-    mockFs.fileExists = true;
+    await fsPromises.writeFile(cacheFilePath, JSON.stringify({ [key]: 'let b = 2;' }), 'utf8');
 
     const result = await cache.get(prompt);
     expect(result).toBe('let b = 2;');
@@ -67,8 +46,7 @@ describe('LLMCache', () => {
   it('should return null for unmatched prompt in existing cache', async () => {
     const prompt = 'existing prompt';
     const key = createHash('sha256').update(prompt).digest('hex');
-    mockFs.data = JSON.stringify({ [key]: 'let b = 2;' });
-    mockFs.fileExists = true;
+    await fsPromises.writeFile(cacheFilePath, JSON.stringify({ [key]: 'let b = 2;' }), 'utf8');
 
     const result = await cache.get('new prompt');
     expect(result).toBeNull();
@@ -77,13 +55,13 @@ describe('LLMCache', () => {
   it('should append to an existing cache', async () => {
     const existingPrompt = 'existing prompt';
     const existingKey = createHash('sha256').update(existingPrompt).digest('hex');
-    mockFs.data = JSON.stringify({ [existingKey]: 'let b = 2;' });
-    mockFs.fileExists = true;
+    await fsPromises.writeFile(cacheFilePath, JSON.stringify({ [existingKey]: 'let b = 2;' }), 'utf8');
 
     await cache.set('new prompt', 'let c = 3;');
     const newKey = createHash('sha256').update('new prompt').digest('hex');
 
-    const cacheData = JSON.parse(mockFs.data);
+    const cacheContent = await fsPromises.readFile(cacheFilePath, 'utf8');
+    const cacheData = JSON.parse(cacheContent);
     expect(cacheData[existingKey]).toBe('let b = 2;');
     expect(cacheData[newKey]).toBe('let c = 3;');
   });

@@ -76,4 +76,46 @@ describe("Control Flow Actions", () => {
       expect(action.action.action).toBeInstanceOf(ClickAction);
     });
   });
+
+  describe("RetryAction", () => {
+    it("should parse retry action correctly", () => {
+      const action = ActionParser.parse("retry:3:click:#btn") as any;
+      expect(action.constructor.name).toBe("RetryAction");
+      expect(action.maxRetries).toBe(3);
+      expect(action.action).toBeInstanceOf(ClickAction);
+    });
+
+    it("should execute inner action and stop if it succeeds on first try", async () => {
+      const action = ActionParser.parse("retry:3:click:#btn") as any;
+      action.action.execute = mock(async () => ({ success: true }));
+
+      const result = await action.execute(mockPage as Page);
+      expect(result.success).toBe(true);
+      expect(action.action.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry inner action until it succeeds", async () => {
+      const action = ActionParser.parse("retry:3:click:#btn") as any;
+      let calls = 0;
+      action.action.execute = mock(async () => {
+        calls++;
+        if (calls < 3) return { success: false, error: "Failed" };
+        return { success: true };
+      });
+
+      const result = await action.execute(mockPage as Page);
+      expect(result.success).toBe(true);
+      expect(action.action.execute).toHaveBeenCalledTimes(3);
+    });
+
+    it("should return failure if max retries are exceeded", async () => {
+      const action = ActionParser.parse("retry:2:click:#btn") as any;
+      action.action.execute = mock(async () => ({ success: false, error: "Always fails" }));
+
+      const result = await action.execute(mockPage as Page);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Always fails");
+      expect(action.action.execute).toHaveBeenCalledTimes(2);
+    });
+  });
 });
