@@ -87,3 +87,8 @@ Constraint: When using Ollama, the model must be pre-pulled by the user. The fal
 Decision: Added support for Anthropic Claude models via the `ANTHROPIC_API_KEY` in `LLMClient` using native `fetch`.
 Reasoning: To offer users more flexibility when choosing remote models for automated test generation, while maintaining a lightweight architecture without third-party SDK dependencies.
 Constraint: Current implementation targets `claude-3-5-sonnet-20241022` and passes `max_tokens` alongside `system` messages as required by the Anthropic API.
+
+## 2026-03-06 - Retry Action
+Decision: Added `RetryAction` to the Unified Action Architecture, enabling `retry:<count>:<action>` commands.
+Reasoning: Enhances test robustness by allowing explicit retry loops around flaky actions or elements that take time to appear.
+Constraint: The wait timeout between retries is currently hardcoded to 500ms; future improvements could make this interval configurable.

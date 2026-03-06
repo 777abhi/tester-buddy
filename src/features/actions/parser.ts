@@ -1,5 +1,5 @@
 import { Action } from './interface';
-import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, ExpectAction, LoopAction, ConditionAction } from './implementations';
+import { ClickAction, FillAction, WaitAction, GotoAction, PressAction, ScrollAction, ExpectAction, LoopAction, ConditionAction, RetryAction } from './implementations';
 
 export class ActionParser {
   static parse(actionString: string): Action {
@@ -30,6 +30,8 @@ export class ActionParser {
         return this.parseLoop(params);
       case 'if':
         return this.parseCondition(params);
+      case 'retry':
+        return this.parseRetry(params);
       default:
         throw new Error(`Unknown action type: ${type}`);
     }
@@ -73,6 +75,20 @@ export class ActionParser {
     const actionStr = this.unquote(actionStrRaw);
     const action = this.parse(actionStr);
     return new ConditionAction(selector, action);
+  }
+
+  private static parseRetry(params: string): RetryAction {
+    const [countStr, actionStrRaw] = this.peelParam(params);
+    const count = parseInt(countStr, 10);
+    if (isNaN(count)) {
+      throw new Error(`Invalid retry count: ${countStr}`);
+    }
+    if (!actionStrRaw) {
+        throw new Error(`Invalid retry params: ${params}. Format: retry:count:action`);
+    }
+    const actionStr = this.unquote(actionStrRaw);
+    const action = this.parse(actionStr);
+    return new RetryAction(count, action);
   }
 
   private static peelParam(params: string): [string, string] {

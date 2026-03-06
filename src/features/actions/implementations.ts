@@ -211,6 +211,39 @@ export class LoopAction implements Action {
   }
 }
 
+export class RetryAction implements Action {
+  constructor(public maxRetries: number, public action: Action) {}
+
+  async execute(page: Page): Promise<ActionResult> {
+    console.log(`Attempting action with up to ${this.maxRetries} retries`);
+    let lastResult: ActionResult = { success: false, error: 'Failed' };
+
+    for (let i = 1; i <= this.maxRetries; i++) {
+      console.log(`RetryAction - Attempt ${i} of ${this.maxRetries}`);
+      lastResult = await this.action.execute(page);
+      if (lastResult.success) {
+        return lastResult;
+      }
+      if (i < this.maxRetries) {
+        console.log(`RetryAction - Attempt ${i} failed. Retrying...`);
+        // Small delay between retries
+        try {
+          await page.waitForTimeout(500);
+        } catch { /* ignore */ }
+      }
+    }
+
+    console.warn(`RetryAction - All ${this.maxRetries} attempts failed.`);
+    return lastResult;
+  }
+
+  toCode(semanticLocator?: string): string {
+    return `await expect(async () => {
+  ${this.action.toCode()}
+}).toPass({ intervals: [500], timeout: ${this.maxRetries * 1000} });`;
+  }
+}
+
 export class ConditionAction implements Action {
   constructor(public selector: string, public action: Action) {}
 

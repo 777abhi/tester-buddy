@@ -39,4 +39,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 -   **AI-Powered Test Generation**: Easily generate Playwright test suites via LLM prompts from exploration sessions using the `--prompt` option in `codegen`, or generate the test directly using the `--llm` flag. Supported via OpenAI API, Anthropic API (Claude), or local Ollama instances.
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
--   **Future Improvement**: Introduce caching for LLM responses to reduce API costs and improve test generation speed for repeated prompts.
+-   **Status Update**: Implemented `RetryAction` to handle flaky UI components by wrapping CLI actions in an explicit retry loop (e.g., `retry:3:click:#btn`).
+-   **Future Improvement**: Make the wait interval in `RetryAction` configurable instead of defaulting to a hardcoded 500ms.
