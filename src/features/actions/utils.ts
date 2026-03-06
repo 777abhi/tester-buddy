@@ -5,7 +5,7 @@ export async function getSemanticLocator(page: Page, selector: string): Promise<
     const handle = await page.$(selector);
     if (!handle) return undefined;
 
-    const semantic = await page.evaluate((el: HTMLElement) => {
+    const semantic = await page.evaluate((el: HTMLElement | SVGElement) => {
       function escape(str: string) {
         return str.replace(/'/g, "\\'");
       }
@@ -14,7 +14,7 @@ export async function getSemanticLocator(page: Page, selector: string): Promise<
       const role = el.getAttribute('role');
       const ariaLabel = el.getAttribute('aria-label');
       const placeholder = el.getAttribute('placeholder');
-      const text = el.innerText?.trim()?.split('\n')[0]; // First line only
+      const text = (el as HTMLElement).innerText?.trim()?.split('\n')[0]; // First line only
       const testId = el.getAttribute('data-testid');
 
       // 1. Explicit Role

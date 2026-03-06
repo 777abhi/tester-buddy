@@ -1,0 +1,8 @@
+{
+  "history": [
+    { "action": "goto:http://localhost:3000", "semantic": null },
+    { "action": "fill:#username:admin", "semantic": "getByLabel('Username:')" },
+    { "action": "fill:#password:password", "semantic": "getByLabel('Password:')" },
+    { "action": "click:button[type='submit']", "semantic": "getByRole('button', { name: 'Login' })" }
+  ]
+}
