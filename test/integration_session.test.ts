@@ -27,7 +27,7 @@ describe('Session Integration', () => {
         });
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         server.stop();
         if (existsSync(SESSION_FILE)) unlinkSync(SESSION_FILE);
     });

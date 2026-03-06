@@ -1,95 +1,228 @@
-# Tester Buddy - Assurance and Audit Report
+# Tester Buddy - Feature Demonstration Report
 
-## Execution Summary
-* **Last Executed Date:** 2026-03-02T06:06:16Z
-* **Test Runner:** `bun test v1.2.14`
-* **Total Tests Ran:** 78
-* **Passed Tests:** 78
-* **Failed Tests:** 0
-* **Expect() Calls:** 190
-* **Execution Time:** ~4.13s
-* **Overall Code Coverage:** 72.91% Functions | 67.42% Lines
+This report outlines the functionality of the `tester-buddy` utility, demonstrating its capabilities from an actual user's perspective. It includes commands executed against a local test application (`http://localhost:3000`), with their resulting logs and relevant outputs.
 
----
+## Setup
 
-## Testing Methodology
+A local testing server was spawned hosting a basic page (`index.html`) containing a login form, links, and an interactive button.
 
-The testing strategy employed uses a combination of **Unit Testing** and **Integration Testing** leveraging `bun:test` to comprehensively validate utility features ranging from DOM exploration, crawling, and fuzzing to code generation, network mocking, auditing, and visual assertions.
-
-### 1. Crawling (`test/crawl.test.ts`)
-The `Crawler` feature is verified against a mocked `Bun.serve` server containing varying link types (valid paths, broken links, external links). Tests ensure:
-- Depth-First / Breadth-First traversal logic respects depth limits (`--depth` flag).
-- Both internal relative linking and absolute path normalization accurately resolves paths.
-- Proper handling and identification of non-200 OK statuses (e.g., HTTP 404).
-- Exclusion of external domains to prevent unintended scope creep.
-
-### 2. Exploring and Action Parsing (`test/explorer.test.ts`, `test/features/action_parser.test.ts`)
-The test cases cover standard command parsing and execution:
-- The `ActionParser` extracts commands accurately (like `click:selector`, `fill:selector:value`) while correctly escaping strings with colons inside quoted strings.
-- DOM interrogation respects overrides specified in `BuddyConfig` (e.g., customized selectors for specific web elements).
-- Interactive mode evaluates correct Playwright context and executes the predefined selectors without encountering runtime DOM evaluation exceptions.
-
-### 3. Fuzzing (`test/fuzzer.test.ts`)
-Stress-testing form fields via fuzz payloads:
-- A local server is spun up presenting forms with varying input fields.
-- Tests trigger form population loops utilizing fuzz parameters.
-- Validates the script's capability of executing Buffer Overflows, XSS, and SQL injection strings securely on targeted domains.
-
-### 4. Code Generation (`test/codegen.test.ts`, `test/codegen_semantic.test.ts`, `test/codegen_ai.test.ts`)
-Conversion of recorded browser actions into reproducible scripts:
-- Validates deduplication of contiguous `goto` assertions correctly matching user intent.
-- Validates generation of robust *Semantic Locators* over brittle CSS selectors when metadata is exposed by the page context.
-- Fallback mechanisms for selectors if semantically absent.
-- Assures prompt-formatting works flawlessly with the AI model configuration schemas for generative LLM outputs.
-
-### 5. Session Management & Integration (`test/integration_session.test.ts`, `test/session.test.ts`)
-- Validation of persistent session files, testing sequential loading and rewriting.
-- Integration tests confirm full navigation flows to mocked sites successfully append actions directly to a local JSON file format without concurrency clashes.
-- Error handling paths cover `ENOENT` on legacy state schemas gracefully.
-
-### 6. Healer & Self-Correction (`test/healer.test.ts`)
-- `Healer` tests mock failures against expected input and button objects.
-- Ensures the dynamic heuristic matching successfully rewrites faulty CSS paths to exact text matching queries or by searching the `name` attribute of input elements.
-- Asserts returning null correctly on complete unrecoverable DOM misses.
-
-### 7. Core Monitoring & Auditing (`test/monitor_errors.test.ts`, `test/audit.test.ts`, `test/visual.test.ts`)
-- The `monitorErrors` flag accurately catches broken resources (e.g., mocked 500 & 404 HTTP requests from `Bun.serve`) inside the `BrowserManager`.
-- The `VisualMonitor` properly interfaces with `pixelmatch` highlighting 0 mismatches for identical images, and asserting differing percentages on modified files.
-- The `Auditor` properly avoids running a11y testing against `about:blank`, correctly invokes `@axe-core/playwright`, and formats standard violations arrays without aborting the main runner flow gracefully.
+```html
+<!-- Test Application Structure -->
+<h1>Tester Buddy Test Page</h1>
+<form id="login" action="/submit" method="POST">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <button type="submit">Login</button>
+</form>
+<div>
+    <a href="/about.html">About</a>
+    <button id="alert-btn" onclick="alert('Hello!')">Alert</button>
+</div>
+```
 
 ---
 
-## Detailed Coverage Metrics
+## Sidekick Mode (Manual Testing Companion)
 
-| File Path | % Functions | % Lines | Uncovered Line #s |
-| :--- | :---: | :---: | :--- |
-| **All files** | **72.91** | **67.42** | |
-| `src/buddy.ts` | 60.00 | 42.80 | 60-68,80-91,106-140,243-277,287-346 |
-| `src/config.ts` | 50.00 | 52.17 | 55-65 |
-| `src/core/browser.ts` | 87.50 | 75.49 | 33-57 |
-| `src/features/actions/executor.ts` | 22.22 | 25.18 | 42-92,96-115,119-126,130-154 |
-| `src/features/actions/healer.ts` | 50.00 | 28.57 | 17,22-53,58-59 |
-| `src/features/actions/implementations.ts` | 74.29 | 68.57 | 56-63,74-81,104,136-141,148-175,206-207,232-233 |
-| `src/features/actions/interface.ts` | 100.00 | 100.00 | |
-| `src/features/actions/parser.ts` | 88.89 | 88.12 | 8,41,49,58,61,71,87-88,94,106,108 |
-| `src/features/actions/types.ts` | 100.00 | 100.00 | |
-| `src/features/actions/utils.ts` | 66.67 | 9.72 | 8-70,75-76 |
-| `src/features/audit.ts` | 80.00 | 100.00 | |
-| `src/features/codegen.ts` | 66.67 | 97.92 | |
-| `src/features/constants.ts` | 100.00 | 100.00 | |
-| `src/features/crawler.ts` | 66.67 | 85.07 | 25,49,66,86-92 |
-| `src/features/explorer.ts` | 75.00 | 15.69 | 36-78 |
-| `src/features/forms.ts` | 0.00 | 1.33 | 21-94 |
-| `src/features/fuzzer.ts` | 70.00 | 91.18 | 138-141,144-147,150-153 |
-| `src/features/index.ts` | 100.00 | 100.00 | |
-| `src/features/network.ts` | 75.00 | 38.71 | 16-34 |
-| `src/features/performance.ts` | 50.00 | 8.51 | 20-62 |
-| `src/features/repl.ts` | 88.89 | 90.00 | 7-11 |
-| `src/features/seeder.ts` | 100.00 | 100.00 | |
-| `src/features/session.ts` | 80.00 | 89.29 | 32-33 |
-| `src/features/state.ts` | 50.00 | 43.62 | 23-25,56-57,64-111 |
-| `src/features/visual.ts` | 66.67 | 72.22 | 28,47-55 |
-| `src/features/visualizer.ts` | 100.00 | 96.15 | 46-47 |
-| `src/utils/url.ts` | 100.00 | 100.00 | |
+The `sidekick` command acts as a companion for manual testing. It launches an interactive browser session where QA testers can perform exploratory tests.
 
-*Note: Line items without Uncovered Line #s indicate 100% line coverage for that file based on metrics extracted during execution.*
+**Command:**
+```bash
+npm run buddy -- sidekick --url http://localhost:3000
+```
+
+**Output Log:**
+```
+> app@1.0.0 buddy
+> ts-node src/cli.ts sidekick --url http://localhost:3000
+
+Launching interactive session...
+```
+*Note: Due to its interactive nature, it opens a Chromium window where standard testing takes place.*
+
+---
+
+## Scout Commands (Automated Utilities)
+
+The `scout` module provides various automation tools ideal for LLM agents or rapid structure checks.
+
+### 1. Page Exploration (`scout explore`)
+Scans the target URL and generates a Markdown table of interactive elements (inputs, links, buttons) that an AI or user might want to interact with. It also captures a screenshot.
+
+**Command:**
+```bash
+npm run buddy -- scout explore http://localhost:3000 --screenshot
+```
+
+**Output:**
+```
+Launching browser (headless: true)...
+Navigating to http://localhost:3000...
+Screenshot saved to screenshot.png
+Current URL: http://localhost:3000/
+Page Title: Test Page
+
+| Tag | Text/Value | ID | Class | ARIA-label |
+|---|---|---|---|---|
+| input |  | username |  |  |
+| input |  | password |  |  |
+| button | Login |  |  |  |
+| a | About |  |  |  |
+| button | Alert | alert-btn |  |  |
+Browser closed.
+```
+**Screenshot Captured:** `screenshot.png`
+
+### 2. Form Analysis (`scout forms`)
+Extracts details about all forms available on the page, including their inputs, types, and whether they are required fields.
+
+**Command:**
+```bash
+npm run buddy -- scout forms http://localhost:3000
+```
+
+**Output:**
+```
+Launching browser (headless: true)...
+Navigating to http://localhost:3000...
+###  (ID: login)
+| Label | Type | Name | ID | Required | Current Value |
+|---|---|---|---|---|---|
+| Username: | text | username | username | true |  |
+| Password: | password | password | password | true |  |
+| Login | submit |  |  | false |  |
+
+### Standalone Inputs (ID: standalone-inputs)
+| Label | Type | Name | ID | Required | Current Value |
+|---|---|---|---|---|---|
+| Alert | submit |  | alert-btn | false |  |
+
+Browser closed.
+```
+
+### 3. Website Crawler (`scout crawl`)
+Maps the website structure by discovering and visiting links up to a predefined depth, generating a status report.
+
+**Command:**
+```bash
+npm run buddy -- scout crawl http://localhost:3000
+```
+
+**Output:**
+```
+Launching browser (headless: true)...
+Starting crawl from http://localhost:3000 with depth 2...
+Crawling: http://localhost:3000 (Depth: 0)
+Crawling: http://localhost:3000/about.html (Depth: 1)
+Crawling: http://localhost:3000/index.html (Depth: 2)
+
+Crawling complete. Found 3 pages.
+
+| Status | URL | Links Found | Error |
+|---|---|---|---|
+| ✅ 200 | http://localhost:3000 | 1 |  |
+| ✅ 200 | http://localhost:3000/about.html | 1 |  |
+| ✅ 200 | http://localhost:3000/index.html | 1 |  |
+Browser closed.
+```
+
+### 4. Vulnerability Fuzzer (`scout fuzz`)
+Injects common attack vectors (SQLi, XSS, Buffer Overflow, etc.) into detected forms and observes the page state to detect potential vulnerabilities.
+
+**Command:**
+```bash
+npm run buddy -- scout fuzz http://localhost:3000
+```
+
+**Output:**
+```
+Launching browser (headless: true)...
+Navigating to http://localhost:3000...
+Found 2 forms. Starting fuzzing...
+Fuzzing form login with SQL Injection...
+Fuzzing form login with XSS...
+Fuzzing form login with Buffer Overflow...
+Fuzzing form login with Format String...
+Fuzzing form login with Integer Overflow...
+Fuzzing form login with Boundary Zero...
+Fuzzing form login with Boundary Negative...
+
+### Fuzzing Results for http://localhost:3000
+
+| Form ID | Payload Type | Status | Error | Time (ms) |
+|---|---|---|---|---|
+| login | SQL Injection | ⚠️ error | Failed to load resource: th... | 661 |
+| login | XSS | ⚠️ error | Failed to load resource: th... | 632 |
+| login | Buffer Overflow | ⚠️ error | Failed to load resource: th... | 643 |
+| login | Format String | ⚠️ error | Failed to load resource: th... | 625 |
+| login | Integer Overflow | ⚠️ error | Failed to load resource: th... | 620 |
+| login | Boundary Zero | ⚠️ error | Failed to load resource: th... | 635 |
+| login | Boundary Negative | ⚠️ error | Failed to load resource: th... | 620 |
+
+🚨 Detected 7 potential vulnerabilities or crashes!
+Browser closed.
+```
+
+### 5. Visual Regression Testing (`scout visual`)
+Captures a baseline screenshot and later compares it against the current state to detect visual UI changes.
+
+**Commands:**
+```bash
+# Generate Baseline
+npm run buddy -- scout visual http://localhost:3000 --out baseline.png
+
+# Compare Against Baseline
+npm run buddy -- scout visual http://localhost:3000 --base baseline.png --out diff.png
+```
+
+**Output (Comparison):**
+```
+Launching browser (headless: true)...
+Navigating to http://localhost:3000...
+Diff image saved to diff.png
+Browser closed.
+Visual check complete.
+Mismatch pixels: 0
+Images match!
+```
+
+---
+
+## Test Generation (`codegen`)
+
+The codegen utility translates a saved session history (actions like navigating, filling, and clicking) into an automated Playwright test script leveraging semantic locators automatically discovered by the execution engine.
+
+**Command:**
+```bash
+npm run buddy -- codegen --session my_session.json
+```
+
+**Given Session (`my_session.json`):**
+```json
+{
+  "history": [
+    { "action": "goto:http://localhost:3000", "semantic": null },
+    { "action": "fill:#username:admin", "semantic": "getByLabel('Username:')" },
+    { "action": "fill:#password:password", "semantic": "getByLabel('Password:')" },
+    { "action": "click:button[type='submit']", "semantic": "getByRole('button', { name: 'Login' })" }
+  ]
+}
+```
+
+**Generated Playwright Code:**
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('generated test', async ({ page }) => {
+  await page.goto('http://localhost:3000');
+  await page.getByLabel('Username:').fill('admin');
+  await page.getByLabel('Password:').fill('password');
+  await page.getByRole('button', { name: 'Login' }).click();
+});
+```
+
+---
+
+*End of Report.*

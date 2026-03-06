@@ -1,4 +1,5 @@
-import { Page, expect } from 'playwright';
+import { Page } from 'playwright';
+import { expect } from '@playwright/test';
 import { Action } from './interface';
 import { ActionResult } from './types';
 import { getSemanticLocator } from './utils';
