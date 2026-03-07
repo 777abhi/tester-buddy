@@ -1,10 +1,13 @@
 import { LLMCache } from './llm_cache';
+import { LLMConfig } from '../config';
 
 export class LLMClient {
   private cache: LLMCache;
+  private config: LLMConfig;
 
-  constructor() {
+  constructor(config: LLMConfig = {}) {
     this.cache = new LLMCache();
+    this.config = config;
   }
 
   async generateTestCode(prompt: string): Promise<string> {
@@ -13,12 +16,12 @@ export class LLMClient {
       return cachedResponse;
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    const ollamaModel = process.env.OLLAMA_MODEL;
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = this.config.openaiKey;
+    const ollamaModel = this.config.ollamaModel;
+    const anthropicKey = this.config.anthropicKey;
 
     if (!apiKey && !ollamaModel && !anthropicKey) {
-      throw new Error('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
+      throw new Error('LLM configuration is missing. Either openaiKey, anthropicKey, or ollamaModel must be provided.');
     }
 
     const systemPrompt = 'You are an expert software engineer in test. Your job is to write Playwright test code based on the user\'s prompt.';
@@ -49,7 +52,7 @@ export class LLMClient {
         })
       });
     } else if (ollamaModel) {
-      const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434/api/chat';
+      const ollamaUrl = this.config.ollamaUrl || 'http://localhost:11434/api/chat';
       response = await fetch(ollamaUrl, {
         method: 'POST',
         headers: {
@@ -64,8 +67,7 @@ export class LLMClient {
           }
         })
       });
-    } else {
-      // apiKey is guaranteed to be truthy here
+    } else if (apiKey) {
       response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -78,6 +80,8 @@ export class LLMClient {
           temperature: 0.2
         })
       });
+    } else {
+      throw new Error('Unexpected configuration state');
     }
 
     if (!response.ok) {

@@ -31,4 +31,19 @@ describe("ConfigLoader", () => {
     const config = await ConfigLoader.load("non-existent-file.json");
     expect(config).toEqual({});
   });
+
+  it("should fallback to environment variables for LLM config", async () => {
+    const originalKey = process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = "env-key";
+    try {
+      const config = await ConfigLoader.load("non-existent-file.json");
+      expect(config.llm?.openaiKey).toBe("env-key");
+    } finally {
+      if (originalKey) {
+        process.env.OPENAI_API_KEY = originalKey;
+      } else {
+        delete process.env.OPENAI_API_KEY;
+      }
+    }
+  });
 });

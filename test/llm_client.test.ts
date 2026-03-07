@@ -30,25 +30,22 @@ describe('LLMClient', () => {
 
   describe('Configuration and Errors', () => {
     it('should throw an error if no API key or Ollama model is provided', async () => {
-      const client = new LLMClient();
-      await expect(client.generateTestCode('prompt error 1')).rejects.toThrow('Either OPENAI_API_KEY, ANTHROPIC_API_KEY, or OLLAMA_MODEL environment variable is required');
+      const client = new LLMClient({});
+      await expect(client.generateTestCode('prompt error 1')).rejects.toThrow('LLM configuration is missing. Either openaiKey, anthropicKey, or ollamaModel must be provided.');
     });
 
     it('should throw an error if the API request fails', async () => {
-      process.env.OPENAI_API_KEY = 'test-key';
-
       global.fetch = mock(() =>
         Promise.resolve(new Response(JSON.stringify({ error: { message: 'Bad request' } }), { status: 400 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ openaiKey: 'test-key' });
       await expect(client.generateTestCode('prompt error 2')).rejects.toThrow('LLM API returned status 400: {"error":{"message":"Bad request"}}');
     });
   });
 
   describe('OpenAI Support', () => {
     it('should call the OpenAI API with the prompt and return the generated code', async () => {
-      process.env.OPENAI_API_KEY = 'test-key';
       const mockResponse = {
         choices: [
           {
@@ -63,7 +60,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ openaiKey: 'test-key' });
       // force empty cache read by overriding class behavior
       (client as any).cache.get = mock(async () => null);
       (client as any).cache.set = mock(async () => {});
@@ -85,7 +82,6 @@ describe('LLMClient', () => {
     });
 
     it('should return raw content if no code block is found', async () => {
-      process.env.OPENAI_API_KEY = 'test-key';
       const mockResponse = {
         choices: [
           {
@@ -100,7 +96,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ openaiKey: 'test-key' });
       const result = await client.generateTestCode('prompt no block unique');
 
       expect(result).toBe('import { test } from "@playwright/test";\n// some test');
@@ -109,7 +105,6 @@ describe('LLMClient', () => {
 
   describe('Anthropic Support', () => {
     it('should call the Anthropic API with the prompt and return the generated code', async () => {
-      process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
       const mockResponse = {
         content: [
           {
@@ -122,7 +117,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ anthropicKey: 'test-anthropic-key' });
       // force empty cache read by overriding class behavior
       (client as any).cache.get = mock(async () => null);
       (client as any).cache.set = mock(async () => {});
@@ -144,7 +139,6 @@ describe('LLMClient', () => {
     });
 
     it('should return raw content if no code block is found for anthropic', async () => {
-      process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
       const mockResponse = {
         content: [
           {
@@ -157,7 +151,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ anthropicKey: 'test-anthropic-key' });
       const result = await client.generateTestCode('prompt anthropic no block unique');
 
       expect(result).toBe('import { test } from "@playwright/test";\n// some anthropic test');
@@ -166,8 +160,6 @@ describe('LLMClient', () => {
 
   describe('Ollama Support', () => {
     it('should call the Ollama API when OLLAMA_MODEL is present', async () => {
-      process.env.OLLAMA_MODEL = 'llama3';
-
       const mockResponse = {
         message: { content: '```typescript\n// ollama code\n```' }
       };
@@ -176,7 +168,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ ollamaModel: 'llama3' });
       // force empty cache read by overriding class behavior
       (client as any).cache.get = mock(async () => null);
       (client as any).cache.set = mock(async () => {});
@@ -199,9 +191,6 @@ describe('LLMClient', () => {
     });
 
     it('should use custom OLLAMA_URL if provided', async () => {
-      process.env.OLLAMA_MODEL = 'llama3';
-      process.env.OLLAMA_URL = 'http://custom-ollama:11434/api/chat';
-
       const mockResponse = {
         message: { content: 'code' }
       };
@@ -210,7 +199,7 @@ describe('LLMClient', () => {
         Promise.resolve(new Response(JSON.stringify(mockResponse), { status: 200 }))
       ) as any;
 
-      const client = new LLMClient();
+      const client = new LLMClient({ ollamaModel: 'llama3', ollamaUrl: 'http://custom-ollama:11434/api/chat' });
       // force empty cache read by overriding class behavior
       (client as any).cache.get = mock(async () => null);
       (client as any).cache.set = mock(async () => {});

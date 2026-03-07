@@ -383,7 +383,8 @@ program
       if (options.llm) {
         console.log('Generating code using LLM...');
         const prompt = CodeGenerator.generatePrompt(sessionData.history);
-        const llmClient = new LLMClient();
+        const config = await ConfigLoader.load();
+        const llmClient = new LLMClient(config.llm);
         outputContent = await llmClient.generateTestCode(prompt);
       } else if (options.prompt) {
         outputContent = CodeGenerator.generatePrompt(sessionData.history);
