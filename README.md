@@ -41,3 +41,4 @@ For detailed setup and usage, please refer to the specific guide for your role a
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
 -   **Status Update**: Implemented `RetryAction` to handle flaky UI components by wrapping CLI actions in an explicit retry loop (e.g., `retry:3:click:#btn`).
 -   **Future Improvement**: Make the wait interval in `RetryAction` configurable instead of defaulting to a hardcoded 500ms.
+-   **Future Improvement**: Expand `ConfigLoader` to support merging configurations from multiple sources (e.g., environment variables and CLI flags) in addition to `buddy.config.json`.
