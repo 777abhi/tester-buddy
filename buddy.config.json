@@ -1,0 +1,32 @@
+{
+  "roles": {
+    "admin": {
+      "cookies": [
+        {
+          "name": "c1",
+          "value": "v1",
+          "domain": "d1",
+          "path": "/"
+        }
+      ],
+      "localStorage": {
+        "l1": "v1",
+        "l2": "v2"
+      }
+    },
+    "captured": {
+      "cookies": [
+        {
+          "name": "c1",
+          "value": "v1",
+          "domain": "d1",
+          "path": "/"
+        }
+      ],
+      "localStorage": {
+        "l1": "v1",
+        "l2": "v2"
+      }
+    }
+  }
+}

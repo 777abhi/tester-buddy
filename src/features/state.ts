@@ -10,26 +10,25 @@ export class StateManager {
     const roleConfig = this.config.roles?.[userRole];
 
     if (roleConfig) {
+      const tasks: Promise<void>[] = [];
+
       if (roleConfig.cookies) {
-        try {
-          await context.addCookies(roleConfig.cookies);
-        } catch (e) {
+        tasks.push(context.addCookies(roleConfig.cookies).catch(e => {
           console.warn("Could not set cookies from config:", e);
-        }
+        }));
       }
 
       if (roleConfig.localStorage) {
-        try {
-          await page.evaluate((storage) => {
-            for (const [key, value] of Object.entries(storage)) {
-              localStorage.setItem(key, value as string);
-            }
-          }, roleConfig.localStorage);
-        } catch (e) {
+        tasks.push(page.evaluate((storage) => {
+          for (const [key, value] of Object.entries(storage)) {
+            localStorage.setItem(key, value as string);
+          }
+        }, roleConfig.localStorage).catch(e => {
           console.warn("Could not set localStorage from config:", e);
-        }
+        }));
       }
 
+      await Promise.all(tasks);
       console.log('State injected from config.');
       return;
     }
@@ -46,20 +45,19 @@ export class StateManager {
     ];
 
     // We catch error in case we are on about:blank and setting cookies fails for specific domain if not matched
-    try {
-      await context.addCookies(cookies);
-    } catch (e) {
-      console.warn("Could not set cookies (maybe domain mismatch or about:blank):", e);
-    }
-
-    try {
-      await page.evaluate((role) => {
+    const fallbackTasks = [
+      context.addCookies(cookies).catch(e => {
+        console.warn("Could not set cookies (maybe domain mismatch or about:blank):", e);
+      }),
+      page.evaluate((role) => {
         localStorage.setItem('user_role', role);
         localStorage.setItem('feature_flags', JSON.stringify({ beta: true }));
-      }, userRole);
-    } catch (e) {
-      console.warn("Could not set localStorage (maybe restricted origin):", e);
-    }
+      }, userRole).catch(e => {
+        console.warn("Could not set localStorage (maybe restricted origin):", e);
+      })
+    ];
+
+    await Promise.all(fallbackTasks);
 
     console.log('State injected (fallback).');
   }
@@ -67,21 +65,27 @@ export class StateManager {
   async dumpState(context: BrowserContext, page: Page, roleName: string = 'captured-session') {
     console.log(`Dumping current session state to role '${roleName}'...`);
 
-    // Cookies
-    const cookies = await context.cookies();
+    // Parallelize cookie and localStorage retrieval
+    const [cookies, localStorageData] = await Promise.all([
+      context.cookies(),
+      page.evaluate(() => {
+        try {
+          return JSON.stringify({ ...localStorage });
+        } catch (e) {
+          return null;
+        }
+      }).catch(e => {
+        console.warn('Could not read localStorage:', e);
+        return null;
+      })
+    ]);
+
     console.log('\n--- COOKIES ---');
     console.log(JSON.stringify(cookies, null, 2));
 
-    // LocalStorage
-    let localStorageData = null;
-    try {
-      localStorageData = await page.evaluate(() => {
-        return JSON.stringify(localStorage);
-      });
+    if (localStorageData) {
       console.log('\n--- LOCAL STORAGE ---');
       console.log(JSON.stringify(JSON.parse(localStorageData), null, 2));
-    } catch (e) {
-      console.warn('Could not read localStorage:', e);
     }
     console.log('-------------------\n');
 
