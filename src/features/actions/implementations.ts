@@ -212,10 +212,10 @@ export class LoopAction implements Action {
 }
 
 export class RetryAction implements Action {
-  constructor(public maxRetries: number, public action: Action) {}
+  constructor(public maxRetries: number, public interval: number = 500, public action: Action) {}
 
   async execute(page: Page): Promise<ActionResult> {
-    console.log(`Attempting action with up to ${this.maxRetries} retries`);
+    console.log(`Attempting action with up to ${this.maxRetries} retries (interval: ${this.interval}ms)`);
     let lastResult: ActionResult = { success: false, error: 'Failed' };
 
     for (let i = 1; i <= this.maxRetries; i++) {
@@ -226,9 +226,9 @@ export class RetryAction implements Action {
       }
       if (i < this.maxRetries) {
         console.log(`RetryAction - Attempt ${i} failed. Retrying...`);
-        // Small delay between retries
+        // Delay between retries
         try {
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(this.interval);
         } catch { /* ignore */ }
       }
     }
@@ -240,7 +240,7 @@ export class RetryAction implements Action {
   toCode(semanticLocator?: string): string {
     return `await expect(async () => {
   ${this.action.toCode()}
-}).toPass({ intervals: [500], timeout: ${this.maxRetries * 1000} });`;
+}).toPass({ intervals: [${this.interval}], timeout: ${this.maxRetries * this.interval * 2} });`;
   }
 }
 

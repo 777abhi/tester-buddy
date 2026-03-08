@@ -78,17 +78,30 @@ export class ActionParser {
   }
 
   private static parseRetry(params: string): RetryAction {
-    const [countStr, actionStrRaw] = this.peelParam(params);
+    const [countStr, remainder] = this.peelParam(params);
     const count = parseInt(countStr, 10);
     if (isNaN(count)) {
       throw new Error(`Invalid retry count: ${countStr}`);
     }
-    if (!actionStrRaw) {
-        throw new Error(`Invalid retry params: ${params}. Format: retry:count:action`);
+    if (!remainder) {
+        throw new Error(`Invalid retry params: ${params}. Format: retry:count:[interval:]action`);
     }
-    const actionStr = this.unquote(actionStrRaw);
-    const action = this.parse(actionStr);
-    return new RetryAction(count, action);
+
+    // Try parsing the next parameter as an interval
+    const [potentialIntervalStr, actionStrRaw] = this.peelParam(remainder);
+
+    // Check if the potential interval is a valid number and there's an action string following it
+    if (actionStrRaw && /^\d+$/.test(potentialIntervalStr)) {
+      const interval = parseInt(potentialIntervalStr, 10);
+      const actionStr = this.unquote(actionStrRaw);
+      const action = this.parse(actionStr);
+      return new RetryAction(count, interval, action);
+    } else {
+      // It's not an interval, so the original remainder is the action string
+      const actionStr = this.unquote(remainder);
+      const action = this.parse(actionStr);
+      return new RetryAction(count, 500, action);
+    }
   }
 
   private static peelParam(params: string): [string, string] {
