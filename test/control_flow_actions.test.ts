@@ -78,10 +78,19 @@ describe("Control Flow Actions", () => {
   });
 
   describe("RetryAction", () => {
-    it("should parse retry action correctly", () => {
+    it("should parse retry action correctly with default interval", () => {
       const action = ActionParser.parse("retry:3:click:#btn") as any;
       expect(action.constructor.name).toBe("RetryAction");
       expect(action.maxRetries).toBe(3);
+      expect(action.interval).toBe(500);
+      expect(action.action).toBeInstanceOf(ClickAction);
+    });
+
+    it("should parse retry action correctly with custom interval", () => {
+      const action = ActionParser.parse("retry:3:1000:click:#btn") as any;
+      expect(action.constructor.name).toBe("RetryAction");
+      expect(action.maxRetries).toBe(3);
+      expect(action.interval).toBe(1000);
       expect(action.action).toBeInstanceOf(ClickAction);
     });
 
@@ -106,6 +115,22 @@ describe("Control Flow Actions", () => {
       const result = await action.execute(mockPage as Page);
       expect(result.success).toBe(true);
       expect(action.action.execute).toHaveBeenCalledTimes(3);
+    });
+
+    it("should wait for custom interval between retries", async () => {
+      const action = ActionParser.parse("retry:2:2000:click:#btn") as any;
+      let calls = 0;
+      action.action.execute = mock(async () => {
+        calls++;
+        if (calls < 2) return { success: false, error: "Failed" };
+        return { success: true };
+      });
+      mockPage.waitForTimeout = mock(async () => {});
+
+      const result = await action.execute(mockPage as Page);
+      expect(result.success).toBe(true);
+      expect(action.action.execute).toHaveBeenCalledTimes(2);
+      expect(mockPage.waitForTimeout).toHaveBeenCalledWith(2000);
     });
 
     it("should return failure if max retries are exceeded", async () => {

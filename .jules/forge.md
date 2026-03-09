@@ -92,3 +92,8 @@ Constraint: Current implementation targets `claude-3-5-sonnet-20241022` and pass
 Decision: Added `RetryAction` to the Unified Action Architecture, enabling `retry:<count>:<action>` commands.
 Reasoning: Enhances test robustness by allowing explicit retry loops around flaky actions or elements that take time to appear.
 Constraint: The wait timeout between retries is currently hardcoded to 500ms; future improvements could make this interval configurable.
+
+## 2026-03-07 - Configurable Retry Action Interval
+Decision: Updated `RetryAction` and `ActionParser` to support an optional wait interval parameter (e.g., `retry:3:1000:click:#btn`), defaulting to 500ms when omitted.
+Reasoning: Improved the reliability of testing slow or unreliable elements by letting users define how long to wait between interaction attempts, rather than using a hardcoded limit.
+Constraint: When parsing an action string, the interval check relies on `!isNaN(Number())` to differentiate an interval from an action command name. This may require future refinement if an action command starting with numeric chars is introduced.
