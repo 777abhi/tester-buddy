@@ -142,5 +142,26 @@ describe("Control Flow Actions", () => {
       expect(result.error).toBe("Always fails");
       expect(action.action.execute).toHaveBeenCalledTimes(2);
     });
+
+    it("should parse retry action with fallback action", () => {
+      const action = ActionParser.parse("retry:3:click:#btn:click:#fallback") as any;
+      expect(action.constructor.name).toBe("RetryAction");
+      expect(action.maxRetries).toBe(3);
+      expect(action.interval).toBe(500);
+      expect(action.action).toBeInstanceOf(ClickAction);
+      expect(action.fallbackAction).toBeInstanceOf(ClickAction);
+      expect((action.fallbackAction as ClickAction).selector).toBe("#fallback");
+    });
+
+    it("should execute fallback action if all retries fail", async () => {
+      const action = ActionParser.parse("retry:2:1000:click:#btn:click:#fallback") as any;
+      action.action.execute = mock(async () => ({ success: false, error: "Always fails" }));
+      action.fallbackAction.execute = mock(async () => ({ success: true }));
+
+      const result = await action.execute(mockPage as Page);
+      expect(result.success).toBe(true);
+      expect(action.action.execute).toHaveBeenCalledTimes(2);
+      expect(action.fallbackAction.execute).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -84,24 +84,139 @@ export class ActionParser {
       throw new Error(`Invalid retry count: ${countStr}`);
     }
     if (!remainder) {
-        throw new Error(`Invalid retry params: ${params}. Format: retry:count:[interval:]action`);
+        throw new Error(`Invalid retry params: ${params}. Format: retry:count:[interval:]action:[fallback_action]`);
     }
 
     // Try parsing the next parameter as an interval
     const [potentialIntervalStr, actionStrRaw] = this.peelParam(remainder);
 
+    let interval = 500;
+    let actionStrToParse = remainder;
+
     // Check if the potential interval is a valid number and there's an action string following it
     if (actionStrRaw && /^\d+$/.test(potentialIntervalStr)) {
-      const interval = parseInt(potentialIntervalStr, 10);
-      const actionStr = this.unquote(actionStrRaw);
-      const action = this.parse(actionStr);
-      return new RetryAction(count, interval, action);
-    } else {
-      // It's not an interval, so the original remainder is the action string
-      const actionStr = this.unquote(remainder);
-      const action = this.parse(actionStr);
-      return new RetryAction(count, 500, action);
+      interval = parseInt(potentialIntervalStr, 10);
+      actionStrToParse = actionStrRaw;
     }
+
+    // Now actionStrToParse contains the main action, and potentially a fallback action.
+    // We can use the same logic as peeling params, but based on action types.
+    // A simpler approach is to try parsing actions until we consume the string.
+
+    // Let's implement a more robust split by finding the next valid action boundary.
+    // Actually, we can use a simpler approach. If we assume the fallback action starts with a known action keyword,
+    // we could scan for it. But nested actions make it hard.
+
+    // Let's rethink peelAction. An action is fundamentally a tree.
+    // But since our action strings are flat, separated by colons:
+    // `retry:count:interval:action_type:param1:...:fallback_type:param1:...`
+
+    // Since we don't know where the first action ends and the fallback action begins without parsing,
+    // let's create an `extractActionAndRest` method.
+    const [action, fallbackStr] = this.extractActionAndRest(actionStrToParse);
+
+    let fallbackAction: Action | undefined = undefined;
+    if (fallbackStr) {
+      // The rest is the fallback action
+      fallbackAction = this.parse(this.unquote(fallbackStr));
+    }
+
+    return new RetryAction(count, interval, action, fallbackAction);
+  }
+
+  private static extractActionAndRest(params: string): [Action, string] {
+    const firstColon = params.indexOf(':');
+    if (firstColon === -1) {
+      throw new Error(`Invalid action format: ${params}`);
+    }
+
+    const type = params.substring(0, firstColon);
+    const remaining = params.substring(firstColon + 1);
+
+    switch (type) {
+      case 'click':
+      case 'wait':
+      case 'goto':
+      case 'press':
+      case 'scroll': {
+        const [param, rest] = this.peelRawParam(remaining);
+        const actionStr = `${type}:${param}`;
+        return [this.parse(actionStr), rest];
+      }
+      case 'fill':
+      case 'expect':
+      case 'if': {
+        const [param1, rest1] = this.peelRawParam(remaining);
+        const [param2, rest2] = this.peelRawParam(rest1);
+        const actionStr = `${type}:${param1}:${param2}`;
+        return [this.parse(actionStr), rest2];
+      }
+      case 'loop': {
+        const [countStr, rest1] = this.peelRawParam(remaining);
+        const [innerAction, rest2] = this.extractActionAndRest(rest1);
+        // innerAction is already parsed, we can just create the LoopAction directly
+        const count = parseInt(this.unquote(countStr), 10);
+        return [new LoopAction(count, innerAction), rest2];
+      }
+      case 'retry': {
+        const [countStr, rest1] = this.peelRawParam(remaining);
+        const [potentialIntervalStr, rest2] = this.peelRawParam(rest1);
+
+        let intervalStr = '';
+        let restAfterInterval = rest1;
+
+        if (rest2 && /^\d+$/.test(this.unquote(potentialIntervalStr))) {
+           intervalStr = potentialIntervalStr;
+           restAfterInterval = rest2;
+        }
+
+        const [innerAction, rest3] = this.extractActionAndRest(restAfterInterval);
+
+        // This won't easily support nested fallbacks inside retry.
+        // For now, let's keep it simple and just reconstruct the string for parse
+        // Actually, creating the action directly is better.
+        const count = parseInt(this.unquote(countStr), 10);
+        const interval = intervalStr ? parseInt(this.unquote(intervalStr), 10) : 500;
+
+        // Let's assume retry inside retry doesn't have a fallback, or if it does, it consumes it.
+        // It's ambiguous: retry:3:click:#btn:click:#fallback. Is fallback for inner or outer?
+        // It's always for the innermost retry that supports it.
+        // Let's just consume the fallback if present for the inner retry.
+        // To be safe, let's just let ActionParser parse the reconstructed string if possible,
+        // or just return the constructed action.
+        return [new RetryAction(count, interval, innerAction), rest3]; // Nested fallbacks not supported in this simple extraction
+      }
+      default:
+        throw new Error(`Unknown action type: ${type}`);
+    }
+  }
+
+  // Like peelParam but returns the raw string with quotes intact, so it can be reassembled
+  private static peelRawParam(params: string): [string, string] {
+    if (!params) return ['', ''];
+    if (params.startsWith('"')) {
+      const endQuote = this.findEndQuote(params, 1);
+      if (endQuote !== -1) {
+        if (params.length === endQuote + 1) {
+          return [params, ''];
+        }
+        if (params[endQuote + 1] === ':') {
+          return [
+            params.substring(0, endQuote + 1),
+            params.substring(endQuote + 2)
+          ];
+        }
+      }
+    }
+
+    const firstColon = params.indexOf(':');
+    if (firstColon === -1) {
+      return [params, ''];
+    }
+    return [
+      params.substring(0, firstColon),
+      params.substring(firstColon + 1)
+    ];
   }
 
   private static peelParam(params: string): [string, string] {

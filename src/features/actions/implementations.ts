@@ -212,7 +212,12 @@ export class LoopAction implements Action {
 }
 
 export class RetryAction implements Action {
-  constructor(public maxRetries: number, public interval: number = 500, public action: Action) {}
+  constructor(
+    public maxRetries: number,
+    public interval: number = 500,
+    public action: Action,
+    public fallbackAction?: Action
+  ) {}
 
   async execute(page: Page): Promise<ActionResult> {
     console.log(`Attempting action with up to ${this.maxRetries} retries (interval: ${this.interval}ms)`);
@@ -234,13 +239,28 @@ export class RetryAction implements Action {
     }
 
     console.warn(`RetryAction - All ${this.maxRetries} attempts failed.`);
+
+    if (this.fallbackAction) {
+      console.log(`Executing fallback action...`);
+      return await this.fallbackAction.execute(page);
+    }
+
     return lastResult;
   }
 
   toCode(semanticLocator?: string): string {
-    return `await expect(async () => {
+    let code = `await expect(async () => {
   ${this.action.toCode()}
-}).toPass({ intervals: [${this.interval}], timeout: ${this.maxRetries * this.interval * 2} });`;
+}).toPass({ intervals: [${this.interval}], timeout: ${this.maxRetries * this.interval * 2} })`;
+
+    if (this.fallbackAction) {
+      code += `.catch(async () => {
+  ${this.fallbackAction.toCode()}
+});`;
+    } else {
+      code += `;`;
+    }
+    return code;
   }
 }
 

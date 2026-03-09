@@ -39,5 +39,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 
 -   **AI-Powered Test Generation**: Easily generate Playwright test suites via LLM prompts from exploration sessions using the `--prompt` option in `codegen`, or generate the test directly using the `--llm` flag. Supported via OpenAI API, Anthropic API (Claude), or local Ollama instances.
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
--   **Status Update**: Made the wait interval in `RetryAction` configurable via `retry:<count>:<interval>:<action>`, allowing custom fallback timings instead of a hardcoded 500ms limit.
--   **Future Improvement**: Support defining fallback logic directly within the `RetryAction` string for custom recovery strategies if the target action fails.
+-   **Status Update**: Supported defining fallback logic directly within the `RetryAction` string via `retry:<count>:[interval:]<action>:[fallback_action]` for custom recovery strategies if the target action fails.
+-   **Future Improvement**: Implement exponential backoff for the wait interval in `RetryAction` to provide more robust handling of temporary network or performance delays.
