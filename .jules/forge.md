@@ -97,3 +97,8 @@ Constraint: The wait timeout between retries is currently hardcoded to 500ms; fu
 Decision: Updated `RetryAction` and `ActionParser` to support an optional wait interval parameter (e.g., `retry:3:1000:click:#btn`), defaulting to 500ms when omitted.
 Reasoning: Improved the reliability of testing slow or unreliable elements by letting users define how long to wait between interaction attempts, rather than using a hardcoded limit.
 Constraint: When parsing an action string, the interval check relies on `!isNaN(Number())` to differentiate an interval from an action command name. This may require future refinement if an action command starting with numeric chars is introduced.
+
+## 2026-03-09 - Fallback Logic for Retry Action
+Decision: Updated `RetryAction` and `ActionParser` to support an optional fallback action parameter (e.g., `retry:3:1000:click:#btn:click:#fallback`).
+Reasoning: Enables custom recovery strategies when a target action fails repeatedly, improving test stability and resilience.
+Constraint: Due to the colon-delimited format, parsing nested actions with fallbacks requires careful handling and currently assumes the fallback action is the last segment of the retry string.
