@@ -102,3 +102,8 @@ Constraint: When parsing an action string, the interval check relies on `!isNaN(
 Decision: Updated `RetryAction` and `ActionParser` to support an optional fallback action parameter (e.g., `retry:3:1000:click:#btn:click:#fallback`).
 Reasoning: Enables custom recovery strategies when a target action fails repeatedly, improving test stability and resilience.
 Constraint: Due to the colon-delimited format, parsing nested actions with fallbacks requires careful handling and currently assumes the fallback action is the last segment of the retry string.
+
+## 2026-03-10 - Exponential Backoff for RetryAction
+Decision: Implemented exponential backoff in `RetryAction`, doubling the interval after each failed attempt. Generated Playwright code also uses an array of exponentially increasing intervals for `toPass`.
+Reasoning: To provide a more robust and efficient strategy for handling temporary network or performance delays, prioritizing resilience while avoiding spamming elements when retrying flakier parts of applications.
+Constraint: Playwright's `toPass` handles array intervals gracefully, but if timeouts are not configured properly, exponential growth could result in overly long wait times.

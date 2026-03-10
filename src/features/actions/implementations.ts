@@ -220,8 +220,9 @@ export class RetryAction implements Action {
   ) {}
 
   async execute(page: Page): Promise<ActionResult> {
-    console.log(`Attempting action with up to ${this.maxRetries} retries (interval: ${this.interval}ms)`);
+    console.log(`Attempting action with up to ${this.maxRetries} retries (base interval: ${this.interval}ms)`);
     let lastResult: ActionResult = { success: false, error: 'Failed' };
+    let currentInterval = this.interval;
 
     for (let i = 1; i <= this.maxRetries; i++) {
       console.log(`RetryAction - Attempt ${i} of ${this.maxRetries}`);
@@ -233,8 +234,9 @@ export class RetryAction implements Action {
         console.log(`RetryAction - Attempt ${i} failed. Retrying...`);
         // Delay between retries
         try {
-          await page.waitForTimeout(this.interval);
+          await page.waitForTimeout(currentInterval);
         } catch { /* ignore */ }
+        currentInterval *= 2; // Exponential backoff
       }
     }
 
@@ -249,9 +251,22 @@ export class RetryAction implements Action {
   }
 
   toCode(semanticLocator?: string): string {
+    const intervals: number[] = [];
+    let currentInterval = this.interval;
+    let totalTimeout = 0;
+
+    for (let i = 0; i < this.maxRetries; i++) {
+      intervals.push(currentInterval);
+      totalTimeout += currentInterval;
+      currentInterval *= 2;
+    }
+
+    // Add a buffer to total timeout to ensure the last attempt can finish
+    totalTimeout += this.interval;
+
     let code = `await expect(async () => {
   ${this.action.toCode()}
-}).toPass({ intervals: [${this.interval}], timeout: ${this.maxRetries * this.interval * 2} })`;
+}).toPass({ intervals: [${intervals.join(', ')}], timeout: ${totalTimeout} })`;
 
     if (this.fallbackAction) {
       code += `.catch(async () => {

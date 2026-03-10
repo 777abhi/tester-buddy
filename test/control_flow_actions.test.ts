@@ -117,20 +117,21 @@ describe("Control Flow Actions", () => {
       expect(action.action.execute).toHaveBeenCalledTimes(3);
     });
 
-    it("should wait for custom interval between retries", async () => {
-      const action = ActionParser.parse("retry:2:2000:click:#btn") as any;
+    it("should wait for custom interval between retries with exponential backoff", async () => {
+      const action = ActionParser.parse("retry:3:2000:click:#btn") as any;
       let calls = 0;
       action.action.execute = mock(async () => {
         calls++;
-        if (calls < 2) return { success: false, error: "Failed" };
+        if (calls < 3) return { success: false, error: "Failed" };
         return { success: true };
       });
       mockPage.waitForTimeout = mock(async () => {});
 
       const result = await action.execute(mockPage as Page);
       expect(result.success).toBe(true);
-      expect(action.action.execute).toHaveBeenCalledTimes(2);
-      expect(mockPage.waitForTimeout).toHaveBeenCalledWith(2000);
+      expect(action.action.execute).toHaveBeenCalledTimes(3);
+      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(1, 2000);
+      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(2, 4000);
     });
 
     it("should return failure if max retries are exceeded", async () => {
@@ -162,6 +163,15 @@ describe("Control Flow Actions", () => {
       expect(result.success).toBe(true);
       expect(action.action.execute).toHaveBeenCalledTimes(2);
       expect(action.fallbackAction.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it("should generate valid Playwright code with exponential backoff intervals", () => {
+      const action = ActionParser.parse("retry:3:1000:click:#btn") as any;
+      const code = action.toCode();
+
+      expect(code).toContain("intervals: [1000, 2000, 4000]");
+      // total timeout is 1000 + 2000 + 4000 + buffer(1000) = 8000
+      expect(code).toContain("timeout: 8000");
     });
   });
 });
