@@ -107,3 +107,8 @@ Constraint: Due to the colon-delimited format, parsing nested actions with fallb
 Decision: Implemented exponential backoff in `RetryAction`, doubling the interval after each failed attempt. Generated Playwright code also uses an array of exponentially increasing intervals for `toPass`.
 Reasoning: To provide a more robust and efficient strategy for handling temporary network or performance delays, prioritizing resilience while avoiding spamming elements when retrying flakier parts of applications.
 Constraint: Playwright's `toPass` handles array intervals gracefully, but if timeouts are not configured properly, exponential growth could result in overly long wait times.
+
+## 2026-03-11 - Dynamic Jitter for RetryAction
+Decision: Implemented up to 50% randomized jitter in `RetryAction`'s exponential backoff intervals.
+Reasoning: To avoid thundering herd problems during concurrent execution or aggressive scraping by distributing retry requests over a broader, randomized time window.
+Constraint: Jitter introduces randomness, meaning the generated Playwright test code intervals will vary slightly each time `toCode()` is invoked.

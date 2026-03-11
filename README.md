@@ -41,4 +41,5 @@ For detailed setup and usage, please refer to the specific guide for your role a
 -   **Architecture**: The codebase uses a Unified Action Architecture (Command Pattern) for parsing and executing CLI actions.
 -   **Status Update**: Supported defining fallback logic directly within the `RetryAction` string via `retry:<count>:[interval:]<action>:[fallback_action]` for custom recovery strategies if the target action fails.
 -   **Status Update**: Implemented exponential backoff for the wait interval in `RetryAction` to provide more robust handling of temporary network or performance delays.
--   **Future Improvement**: Add support for dynamic jitter in exponential backoff to avoid thundering herd problems in concurrent test execution or aggressive scraping.
+-   **Status Update**: Added support for dynamic jitter in exponential backoff to avoid thundering herd problems in concurrent test execution or aggressive scraping.
+-   **Future Improvement**: Add support for dynamic fallback policies (e.g., executing different recovery actions based on specific failure types) in `RetryAction`.

@@ -232,11 +232,13 @@ export class RetryAction implements Action {
       }
       if (i < this.maxRetries) {
         console.log(`RetryAction - Attempt ${i} failed. Retrying...`);
-        // Delay between retries
+        // Delay between retries with up to 50% jitter
+        const jitter = Math.floor(Math.random() * (currentInterval * 0.5));
+        const waitTime = currentInterval + jitter;
         try {
-          await page.waitForTimeout(currentInterval);
+          await page.waitForTimeout(waitTime);
         } catch { /* ignore */ }
-        currentInterval *= 2; // Exponential backoff
+        currentInterval *= 2; // Exponential backoff base
       }
     }
 
@@ -256,8 +258,10 @@ export class RetryAction implements Action {
     let totalTimeout = 0;
 
     for (let i = 0; i < this.maxRetries; i++) {
-      intervals.push(currentInterval);
-      totalTimeout += currentInterval;
+      const jitter = Math.floor(Math.random() * (currentInterval * 0.5));
+      const waitTime = currentInterval + jitter;
+      intervals.push(waitTime);
+      totalTimeout += waitTime;
       currentInterval *= 2;
     }
 
