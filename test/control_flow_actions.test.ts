@@ -1,4 +1,4 @@
-import { expect, it, describe, beforeEach, mock } from "bun:test";
+import { expect, it, describe, beforeEach, afterEach, mock } from "bun:test";
 import { ActionParser } from "../src/features/actions/parser";
 import { ClickAction } from "../src/features/actions/implementations";
 import { Page } from "playwright";
@@ -78,6 +78,18 @@ describe("Control Flow Actions", () => {
   });
 
   describe("RetryAction", () => {
+    let originalRandom: () => number;
+
+    beforeEach(() => {
+      originalRandom = Math.random;
+      // Mock Math.random to always return 0.5 for predictable jitter testing
+      Math.random = () => 0.5;
+    });
+
+    afterEach(() => {
+      Math.random = originalRandom;
+    });
+
     it("should parse retry action correctly with default interval", () => {
       const action = ActionParser.parse("retry:3:click:#btn") as any;
       expect(action.constructor.name).toBe("RetryAction");
@@ -117,7 +129,7 @@ describe("Control Flow Actions", () => {
       expect(action.action.execute).toHaveBeenCalledTimes(3);
     });
 
-    it("should wait for custom interval between retries with exponential backoff", async () => {
+    it("should wait for custom interval between retries with exponential backoff and jitter", async () => {
       const action = ActionParser.parse("retry:3:2000:click:#btn") as any;
       let calls = 0;
       action.action.execute = mock(async () => {
@@ -130,8 +142,11 @@ describe("Control Flow Actions", () => {
       const result = await action.execute(mockPage as Page);
       expect(result.success).toBe(true);
       expect(action.action.execute).toHaveBeenCalledTimes(3);
-      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(1, 2000);
-      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(2, 4000);
+      // Math.random() is 0.5, so jitter is Math.floor(0.5 * interval * 0.5) = Math.floor(0.25 * interval)
+      // Attempt 1: base = 2000. Jitter = floor(0.25 * 2000) = 500. Total = 2500.
+      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(1, 2500);
+      // Attempt 2: base = 4000. Jitter = floor(0.25 * 4000) = 1000. Total = 5000.
+      expect(mockPage.waitForTimeout).toHaveBeenNthCalledWith(2, 5000);
     });
 
     it("should return failure if max retries are exceeded", async () => {
@@ -165,13 +180,17 @@ describe("Control Flow Actions", () => {
       expect(action.fallbackAction.execute).toHaveBeenCalledTimes(1);
     });
 
-    it("should generate valid Playwright code with exponential backoff intervals", () => {
+    it("should generate valid Playwright code with exponential backoff intervals and jitter", () => {
       const action = ActionParser.parse("retry:3:1000:click:#btn") as any;
       const code = action.toCode();
 
-      expect(code).toContain("intervals: [1000, 2000, 4000]");
-      // total timeout is 1000 + 2000 + 4000 + buffer(1000) = 8000
-      expect(code).toContain("timeout: 8000");
+      // Math.random() is 0.5. Jitter is 0.25 * interval.
+      // interval 1: 1000 + 250 = 1250
+      // interval 2: 2000 + 500 = 2500
+      // interval 3: 4000 + 1000 = 5000
+      expect(code).toContain("intervals: [1250, 2500, 5000]");
+      // total timeout is 1250 + 2500 + 5000 + buffer(1000) = 9750
+      expect(code).toContain("timeout: 9750");
     });
   });
 });
