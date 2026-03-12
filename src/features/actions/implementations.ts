@@ -216,7 +216,7 @@ export class RetryAction implements Action {
     public maxRetries: number,
     public interval: number = 500,
     public action: Action,
-    public fallbackAction?: Action
+    public fallbackAction?: Action | Record<string, Action>
   ) {}
 
   async execute(page: Page): Promise<ActionResult> {
@@ -246,7 +246,20 @@ export class RetryAction implements Action {
 
     if (this.fallbackAction) {
       console.log(`Executing fallback action...`);
-      return await this.fallbackAction.execute(page);
+      if (typeof (this.fallbackAction as any).execute === 'function') {
+        return await (this.fallbackAction as Action).execute(page);
+      } else {
+        const fallbackMap = this.fallbackAction as Record<string, Action>;
+        const errorMsg = lastResult.error || '';
+        for (const [key, mappedAction] of Object.entries(fallbackMap)) {
+          if (key !== 'default' && errorMsg.includes(key)) {
+            return await mappedAction.execute(page);
+          }
+        }
+        if (fallbackMap['default']) {
+          return await fallbackMap['default'].execute(page);
+        }
+      }
     }
 
     return lastResult;
@@ -273,9 +286,43 @@ export class RetryAction implements Action {
 }).toPass({ intervals: [${intervals.join(', ')}], timeout: ${totalTimeout} })`;
 
     if (this.fallbackAction) {
-      code += `.catch(async () => {
-  ${this.fallbackAction.toCode()}
+      if (typeof (this.fallbackAction as any).execute === 'function') {
+        code += `.catch(async () => {
+  ${(this.fallbackAction as Action).toCode()}
 });`;
+      } else {
+        const fallbackMap = this.fallbackAction as Record<string, Action>;
+        code += `.catch(async (e: any) => {\n`;
+        let isFirst = true;
+        for (const [key, mappedAction] of Object.entries(fallbackMap)) {
+          if (key === 'default') continue;
+          if (!isFirst) {
+            code += `  } else `;
+          } else {
+            code += `  `;
+          }
+          code += `if (e.message && e.message.includes('${key}')) {\n`;
+          code += `    ${mappedAction.toCode()}\n`;
+          isFirst = false;
+        }
+        if (fallbackMap['default']) {
+          if (!isFirst) {
+            code += `  } else {\n`;
+            code += `    ${fallbackMap['default'].toCode()}\n`;
+            code += `  }\n`;
+          } else {
+            code += `  ${fallbackMap['default'].toCode()}\n`; // Only default provided
+          }
+        } else if (!isFirst) {
+           code += `  } else {\n`;
+           code += `    throw e;\n`;
+           code += `  }\n`;
+        } else {
+           // Case where there is no default and no other keys (should be impossible but handle gracefully)
+           code += `  throw e;\n`;
+        }
+        code += `});`;
+      }
     } else {
       code += `;`;
     }
