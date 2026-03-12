@@ -112,3 +112,8 @@ Constraint: Playwright's `toPass` handles array intervals gracefully, but if tim
 Decision: Implemented up to 50% randomized jitter in `RetryAction`'s exponential backoff intervals.
 Reasoning: To avoid thundering herd problems during concurrent execution or aggressive scraping by distributing retry requests over a broader, randomized time window.
 Constraint: Jitter introduces randomness, meaning the generated Playwright test code intervals will vary slightly each time `toCode()` is invoked.
+
+## 2026-03-12 - Dynamic Fallbacks for RetryAction
+Decision: Updated `RetryAction` to accept a `Record<string, Action>` for its fallback mechanism, allowing targeted recovery logic based on the specific error string encountered during failure.
+Reasoning: Significantly increases the autonomy and resilience of automated workflows by allowing specific responses to different failure modes (e.g., executing a different path for `TimeoutError` vs `NetworkError`).
+Constraint: This mapping relies on string matching against raw error messages, which may be fragile if underlying library error messages change or differ slightly between test runs.
