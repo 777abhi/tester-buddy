@@ -1,5 +1,6 @@
 import { BrowserContext, Page } from 'playwright';
 import { BuddyConfig, ConfigLoader } from '../config';
+import { safeParseLocalStorage } from '../utils/security';
 
 export class StateManager {
   constructor(private config: BuddyConfig) {}
@@ -83,9 +84,11 @@ export class StateManager {
     console.log('\n--- COOKIES ---');
     console.log(JSON.stringify(cookies, null, 2));
 
-    if (localStorageData) {
+    const validatedLocalStorage = localStorageData ? safeParseLocalStorage(localStorageData) : null;
+
+    if (validatedLocalStorage) {
       console.log('\n--- LOCAL STORAGE ---');
-      console.log(JSON.stringify(JSON.parse(localStorageData), null, 2));
+      console.log(JSON.stringify(validatedLocalStorage, null, 2));
     }
     console.log('-------------------\n');
 
@@ -103,12 +106,8 @@ export class StateManager {
       })),
     };
 
-    if (localStorageData) {
-      try {
-        capturedRole.localStorage = JSON.parse(localStorageData);
-      } catch (e) {
-        // ignore
-      }
+    if (validatedLocalStorage) {
+      capturedRole.localStorage = validatedLocalStorage;
     }
 
     this.config.roles[roleName] = capturedRole;
