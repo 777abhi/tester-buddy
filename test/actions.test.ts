@@ -1,5 +1,5 @@
 import { expect, it, describe, beforeEach, spyOn, mock } from "bun:test";
-import { ClickAction, FillAction, PressAction, ScrollAction } from "../src/features/actions/implementations";
+import { ClickAction, FillAction, PressAction, ScrollAction, WaitAction, GotoAction } from "../src/features/actions/implementations";
 import { Page } from "playwright";
 
 describe("Action Implementations", () => {
@@ -53,6 +53,17 @@ describe("Action Implementations", () => {
       expect(result.success).toBe(true);
       expect(result.semanticLocator).toBe("getByRole('button', { name: 'Submit' })");
     });
+
+    it("should return success: false and error message if click fails", async () => {
+      mockPage.click = mock(async () => {
+        throw new Error("Click failed");
+      });
+      const action = new ClickAction("#btn");
+      const result = await action.execute(mockPage as Page);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Click failed");
+    });
   });
 
   describe("FillAction", () => {
@@ -65,15 +76,78 @@ describe("Action Implementations", () => {
       expect(result.semanticLocator).toBe("getByRole('button', { name: 'Submit' })"); // Mocked return
     });
 
-    // The logic to validate params is moved to Parser.
-    // FillAction constructor expects strings.
+    it("should return success: false and error message if fill fails", async () => {
+      mockPage.fill = mock(async () => {
+        throw new Error("Fill failed");
+      });
+      const action = new FillAction("#input", "hello");
+      const result = await action.execute(mockPage as Page);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Fill failed");
+    });
+  });
+
+  describe("WaitAction", () => {
+    it("should wait for the specified timeout", async () => {
+      const action = new WaitAction(100);
+      const result = await action.execute(mockPage as Page);
+
+      expect(mockPage.waitForTimeout).toHaveBeenCalledWith(100);
+      expect(result.success).toBe(true);
+    });
+
+    it("should return success: false and error message if wait fails", async () => {
+      mockPage.waitForTimeout = mock(async () => {
+        throw new Error("Wait failed");
+      });
+      const action = new WaitAction(100);
+      const result = await action.execute(mockPage as Page);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Wait failed");
+    });
+  });
+
+  describe("GotoAction", () => {
+    it("should navigate to the specified URL", async () => {
+      mockPage.goto = mock(async () => {});
+      const action = new GotoAction("https://example.com");
+      const result = await action.execute(mockPage as Page);
+
+      expect(mockPage.goto).toHaveBeenCalledWith("https://example.com");
+      expect(result.success).toBe(true);
+    });
+
+    it("should return success: false and error message if navigation fails", async () => {
+      mockPage.goto = mock(async () => {
+        throw new Error("Navigation failed");
+      });
+      const action = new GotoAction("https://example.com");
+      const result = await action.execute(mockPage as Page);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Navigation failed");
+    });
   });
 
   describe("PressAction", () => {
     it("should press the specified key", async () => {
       const action = new PressAction("Enter");
-      await action.execute(mockPage as Page);
+      const result = await action.execute(mockPage as Page);
       expect(mockPage.keyboard.press).toHaveBeenCalledWith("Enter");
+      expect(result.success).toBe(true);
+    });
+
+    it("should return success: false and error message if press fails", async () => {
+      mockPage.keyboard.press = mock(async () => {
+        throw new Error("Press failed");
+      });
+      const action = new PressAction("Enter");
+      const result = await action.execute(mockPage as Page);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Press failed");
     });
   });
 
