@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { Buddy } from './buddy';
 import { ConfigLoader } from './config';
 import { generateMermaidGraph, SessionManager, CodeGenerator, REPL, LLMClient } from './features';
-import { writeFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
 
 const program = new Command();
 let buddy: Buddy | undefined;
@@ -393,7 +393,7 @@ program
       }
 
       if (outputPath) {
-        writeFileSync(outputPath, outputContent);
+        await writeFile(outputPath, outputContent);
         const type = options.llm ? 'LLM Test code' : (options.prompt ? 'Prompt' : 'Test code');
         console.log(`${type} generated at: ${outputPath}`);
       } else {
