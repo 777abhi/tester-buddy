@@ -44,3 +44,4 @@ For detailed setup and usage, please refer to the specific guide for your role a
 -   **Status Update**: Added support for dynamic jitter in exponential backoff to avoid thundering herd problems in concurrent test execution or aggressive scraping.
 -   **Status Update**: Added support for dynamic fallback policies in `RetryAction`, enabling the execution of specific recovery actions based on the encountered error message, alongside a catch-all default fallback.
 -   **Future Improvement**: Develop an intelligent test flakiness analyzer that leverages ML or historical data to automatically tune retry limits, exponential backoff bases, and dynamic fallback strategies.
+-   **Future Improvement**: Support on-the-fly network throttling configuration via CLI alongside device emulation to test varying mobile network conditions.
