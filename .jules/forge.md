@@ -117,3 +117,8 @@ Constraint: Jitter introduces randomness, meaning the generated Playwright test 
 Decision: Updated `RetryAction` to accept a `Record<string, Action>` for its fallback mechanism, allowing targeted recovery logic based on the specific error string encountered during failure.
 Reasoning: Significantly increases the autonomy and resilience of automated workflows by allowing specific responses to different failure modes (e.g., executing a different path for `TimeoutError` vs `NetworkError`).
 Constraint: This mapping relies on string matching against raw error messages, which may be fragile if underlying library error messages change or differ slightly between test runs.
+
+## 2024-04-28 - Mobile Device Emulation
+ Decision: Used Chrome DevTools Protocol (CDP) session `Network.setUserAgentOverride` alongside `page.setViewportSize` to emulate mobile devices on-the-fly in an existing interactive browser session.
+ Reasoning: The user requirements specified a simple text command (`device <name>`) in the running session to switch emulation. Playwright's `BrowserContext` cannot change its default `userAgent` dynamically after instantiation via standard APIs without re-creating the entire context and page, which would destroy the user's manual exploratory testing state (cookies, local storage, history). CDP allows overriding the user agent mid-session.
+ Constraint: As we only override viewport and user-agent via CDP on the current page, this does not apply full device profile attributes (like `isMobile`, touch support, scale factor) at the context level. Next time, if full context emulation is required, we must decouple session state persistence to allow seamlessly re-launching a new context while reinjecting the captured state.

@@ -1,4 +1,4 @@
-import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { chromium, Browser, BrowserContext, Page, devices } from 'playwright';
 import { redactUrl } from '../utils/url';
 
 export class BrowserManager {
@@ -126,6 +126,42 @@ export class BrowserManager {
     if (this.browser) {
       await this.browser.close();
       console.log('Browser closed.');
+    }
+  }
+
+  async emulateDevice(deviceName: string) {
+    if (!this.context || !this.page) {
+      console.warn('Cannot emulate device without an active context and page.');
+      return;
+    }
+
+    // Try exact match first, then try slugified match (e.g. iphone-14 -> iPhone 14)
+    let device = devices[deviceName];
+    if (!device) {
+        const slug = deviceName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const match = Object.keys(devices).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === slug);
+        if (match) {
+            device = devices[match];
+        }
+    }
+
+    if (!device) {
+      console.warn(`Device "${deviceName}" not found. Ignoring emulation request.`);
+      return;
+    }
+
+    console.log(`Emulating device: ${deviceName}`);
+    if (device.viewport) {
+      await this.page.setViewportSize(device.viewport);
+    }
+
+    if (device.userAgent) {
+      try {
+        const client = await this.context.newCDPSession(this.page);
+        await client.send('Network.setUserAgentOverride', { userAgent: device.userAgent });
+      } catch (e) {
+        console.warn('Failed to set user agent via CDP:', e);
+      }
     }
   }
 }
