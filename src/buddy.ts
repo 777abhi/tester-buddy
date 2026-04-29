@@ -69,6 +69,11 @@ export class Buddy {
     await this.browserManager.launch(headless, storageState);
   }
 
+
+  async emulateDevice(deviceName: string) {
+    await this.browserManager.emulateDevice(deviceName);
+  }
+
   async close() {
     await this.browserManager.close();
   }

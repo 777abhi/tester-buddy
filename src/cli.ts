@@ -54,6 +54,11 @@ program
           const parts = input.split(' ');
           const roleName = parts.length > 1 ? parts[1] : undefined;
           await buddy?.dumpState(roleName);
+        } else if (input.startsWith('device ')) {
+          const deviceName = input.substring(7).trim(); // Remove "device "
+          // Remove quotes if present
+          const cleanName = deviceName.replace(/^["']|["']$/g, '');
+          await buddy?.emulateDevice(cleanName);
         } else if (input === 'exit') {
           await cleanup();
           process.exit(0);

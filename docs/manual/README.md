@@ -63,7 +63,7 @@ Every session is automatically recorded. When you type `exit`, a pure Playwright
 ## 🗺️ Roadmap for Manual Testers
 
 - [x] **Visual Regression Mode**: Take a "baseline" screenshot and automatically highlight differences in future sessions.
-- [ ] **Mobile Device Emulation**: simple text command to switch viewport and user-agent (e.g., `device iphone-14`).
+- [x] **Mobile Device Emulation**: simple text command to switch viewport and user-agent (e.g., `device iphone-14`).
 - [ ] **Markdown Bug Report**: `report bug` command that auto-generates a ticket with trace, screenshots, and logs.
 - [ ] **Network Throttling**: simulate 3G/4G networks to test performance under poor conditions.
 - [ ] **Session Video Recording**: record the entire session as .mp4 for easy sharing.

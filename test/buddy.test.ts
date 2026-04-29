@@ -57,3 +57,23 @@ describe("Buddy.injectState", () => {
     warnSpy.mockRestore();
   });
 });
+
+describe("Buddy.emulateDevice", () => {
+  let buddy: any;
+  let mockBrowserManager: any;
+
+  beforeEach(() => {
+    buddy = new Buddy();
+    mockBrowserManager = {
+      emulateDevice: async () => {},
+    };
+    (buddy as any).browserManager = mockBrowserManager;
+  });
+
+  it("should delegate device emulation to the browser manager", async () => {
+    const emulateSpy = spyOn(mockBrowserManager, "emulateDevice");
+    await buddy.emulateDevice("iPhone 14");
+    expect(emulateSpy).toHaveBeenCalledWith("iPhone 14");
+    emulateSpy.mockRestore();
+  });
+});
