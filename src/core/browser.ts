@@ -1,10 +1,14 @@
 import { chromium, Browser, BrowserContext, Page, devices } from 'playwright';
 import { redactUrl } from '../utils/url';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class BrowserManager {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
   private page: Page | null = null;
+  private userDataDir: string | null = null;
   private consoleErrors: string[] = [];
   private networkErrors: string[] = [];
   private static readonly MAX_CONSOLE_ERRORS = 1000;
@@ -35,15 +39,19 @@ export class BrowserManager {
 
   async launchInteractive(startUrl?: string) {
     console.log('Launching interactive session...');
-    this.browser = await chromium.launch({ headless: false });
-    this.context = await this.browser.newContext({
+
+    this.userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tester-buddy-'));
+    this.context = await chromium.launchPersistentContext(this.userDataDir, {
+      headless: false,
       viewport: null, // Full content
     });
 
     // Start tracing
     await this.context.tracing.start({ screenshots: true, snapshots: true, sources: true });
 
-    this.page = await this.context.newPage();
+    // A persistent context creates a default page
+    const pages = this.context.pages();
+    this.page = pages.length > 0 ? pages[0] : await this.context.newPage();
     
     this.setupListeners();
 
@@ -126,6 +134,20 @@ export class BrowserManager {
     if (this.browser) {
       await this.browser.close();
       console.log('Browser closed.');
+    } else if (this.context) {
+      // In a persistent context, closing the context shuts down the browser.
+      await this.context.close();
+      console.log('Browser context closed.');
+    }
+
+    if (this.userDataDir) {
+      try {
+        fs.rmSync(this.userDataDir, { recursive: true, force: true });
+        console.log('Temporary session data cleaned up.');
+      } catch (e) {
+        console.error('Failed to clean up temporary session data:', e);
+      }
+      this.userDataDir = null;
     }
   }
 
